@@ -230,7 +230,7 @@ aside:
     button:
       enable: true
       icon: fab fa-github
-      text: Follow Me
+      text: Github
       link: https://github.com/Octopus058
   card_announcement:
     enable: true
