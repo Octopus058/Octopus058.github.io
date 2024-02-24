@@ -34,7 +34,6 @@ code_word_wrap: true
  # formal:
    #icon: link || the description || color
 social:
-   fab fa-github: https://github.com/Octopus058 || Github || '#24292e'
    fas fa-envelope: mailto:237940191l@qq.com || Email || '#4a7dbe'
 
 # Image (圖片設置)
@@ -232,7 +231,7 @@ aside:
       enable: true
       icon: fab fa-github
       text: Follow Me
-      link: https://github.com/xxxxxx
+      link: https://github.com/Octopus058
   card_announcement:
     enable: true
     content: This is my Blog
