@@ -234,8 +234,7 @@ aside:
       link: https://github.com/Octopus058
   card_announcement:
     enable: true
-    content: Oct0pu5的个人博客  
-    欢迎加我的QQ2379401911
+    content: Oct0pu5的个人博客  欢迎加我的QQ2379401911
   card_recent_post:
     enable: true
     limit: 5 # if set 0 will show all
