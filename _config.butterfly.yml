@@ -234,7 +234,7 @@ aside:
       link: https://github.com/Octopus058
   card_announcement:
     enable: true
-    content: '你好，这里是互联网的一个小角落，Oct0pu5的个人主页。我是一名学生，来自Z世代，你可以叫我Oct0pu5，笔名刈夫。QQ：2379401911 Bilibili: Oct0pu5   Steam: Oct0pu5   '
+    content: '你好，这里是互联网的一个小角落，Oct0pu5的个人主页。我是一名学生，来自Z世代，你可以叫我Oct0pu5，笔名刈夫。QQ：2379401911 Bilibili: Oct0pu5   Steam: Oct0pu5'
 
   card_recent_post:
     enable: true
