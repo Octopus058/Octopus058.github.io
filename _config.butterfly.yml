@@ -30,18 +30,18 @@ highlight_shrink: false # true: shrink the code blocks / false: expand the code 
 highlight_height_limit: false # unit: px
 code_word_wrap: true
 
-# Social Settings (社交圖標設置)
-# formal:
-#   icon: link || the description || color
+ Social Settings (社交圖標設置)
+ formal:
+   icon: link || the description || color
 social:
-  # fab fa-github: https://github.com/xxxxx || Github || '#24292e'
-  # fas fa-envelope: mailto:xxxxxx@gmail.com || Email || '#4a7dbe'
+   fab fa-github: https://github.com/xxxxx || Github || '#24292e'
+   fas fa-envelope: mailto:xxxxxx@gmail.com || Email || '#4a7dbe'
 
 # Image (圖片設置)
 # --------------------------------------
 
 # Favicon（網站圖標）
-favicon: /img/favicon.png
+favicon: https://i.postimg.cc/qgfKVbmZ/52.jpg
 
 # Avatar (頭像)
 avatar:
