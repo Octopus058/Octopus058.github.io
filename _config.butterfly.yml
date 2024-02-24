@@ -31,7 +31,7 @@ highlight_height_limit: false # unit: px
 code_word_wrap: true
 
  # Social Settings (社交圖標設置)
- formal:
+ # formal:
    #icon: link || the description || color
 social:
    fab fa-github: https://github.com/xxxxx || Github || '#24292e'
