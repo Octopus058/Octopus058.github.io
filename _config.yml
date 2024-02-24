@@ -3,17 +3,17 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Hexo Template
+title: Oct0pu5's Blog
 subtitle: ''
 description: ''
 keywords:
-author: JiJi
+author: Oct0pu5
 language: en
 timezone: ''
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: https://jiji.pro/hexo-template
+url: https://Octopus058.github.io
 permalink: :title/
 permalink_defaults:
 pretty_urls:
@@ -103,5 +103,3 @@ theme: landscape
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: ''
-
-root: /hexo-template
