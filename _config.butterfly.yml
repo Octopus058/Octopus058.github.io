@@ -48,7 +48,7 @@ avatar:
   effect: false
 
 # Disable all banner image
-disable_top_img: true
+disable_top_img: flase
 
 # The banner image of home page
 index_img: https://i.postimg.cc/XqtJBrdZ/QQ-20240224213815.jpg
