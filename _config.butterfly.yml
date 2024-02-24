@@ -234,8 +234,15 @@ aside:
       link: https://github.com/Octopus058
   card_announcement:
     enable: true
-    content: Oct0pu5的个人博客  
-    欢迎加我的QQ2379401911
+    content: '你好，这里是互联网的一个小角落，Oct0pu5的个人主页。    
+我是一名学生，来自Z世代，你可以叫我Oct0pu5，笔名刈夫。    
+我喜欢看东西，动脑子，写东西，“文之”因此得名。      
+如果你想联系我，可以通过以下几种方式
+Bilibili: Oct0pu5   
+QQ群: 697702743  
+邮箱: 2379401911@qq.com  a2379401911@outlook.com   
+Steam: Oct0pu5   '
+
   card_recent_post:
     enable: true
     limit: 5 # if set 0 will show all
