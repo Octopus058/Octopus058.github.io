@@ -3,7 +3,7 @@
 # --------------------------------------
 
 nav:
-  logo: https://i.postimg.cc/XqtJBrdZ/QQ-20240224213815.jpg
+  logo: https://i.postimg.cc/qgfKVbmZ/52.jpg
   display_title: true
   fixed: false # fixed navigation bar
 
@@ -44,14 +44,14 @@ favicon: /img/favicon.png
 
 # Avatar (頭像)
 avatar:
-  img: https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png
+  img: https://i.postimg.cc/qgfKVbmZ/52.jpg
   effect: false
 
 # Disable all banner image
 disable_top_img: false
 
 # The banner image of home page
-index_img:
+index_img: https://i.postimg.cc/XqtJBrdZ/QQ-20240224213815.jpg
 
 # If the banner of page not setting, it will show the top_img
 default_top_img:
