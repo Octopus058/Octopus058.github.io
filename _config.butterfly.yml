@@ -3,7 +3,7 @@
 # --------------------------------------
 
 nav:
-  logo: # image
+  logo: https://i.postimg.cc/XqtJBrdZ/QQ-20240224213815.jpg
   display_title: true
   fixed: false # fixed navigation bar
 
