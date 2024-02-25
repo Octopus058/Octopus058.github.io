@@ -9,7 +9,7 @@ description: '零丁汪洋无数士，核舟轻酌念小诗。'
 keywords: '文之'
 author: Oct0pu5
 language: zh-CN
-timezone: ''
+timezone: Asia/Shanghai
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
@@ -120,6 +120,9 @@ postInfo:
   min2read: false # 阅读时长.
   readCount: false # 阅读次数.
 
-search:
-  path: search.xml
-  field: post
+# Local search
+local_search:
+  enable: true
+  labels:
+    input_placeholder: Search for Posts
+    hits_empty: "We didn't find any results for the search: ${query}" # 如果没有查到内容相关内容显示
