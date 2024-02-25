@@ -209,7 +209,7 @@ footer:
   owner:
     enable: true
     since: 2020
-  custom_text:
+  custom_text:And she's buying a <a herf="https://music.163.com/#/song?id=29719536">stairway to heaven</a>.
   copyright: true # Copyright of theme and framework
 
 # aside (側邊欄)
@@ -223,7 +223,7 @@ aside:
   position: right # left or right
   display:
     archive: true
-    tag: true
+    tag: false
     category: true
   card_author:
     enable: true
@@ -235,7 +235,7 @@ aside:
       link: https://github.com/Octopus058
   card_announcement:
     enable: true
-    content: '你好，这里是互联网的一个小角落，Oct0pu5的个人主页。我是一名学生，QQbot Café制作者。你可以叫我Oct0pu5或我的笔名刈夫。如果你想了解更多，请加我的QQ：2379401911'
+    content: 你好！这里是互联网的一个小角落，Oct0pu5的个人博客。我是一名学生，也是QQbot Café的制作者。你可以叫我Oct或我的笔名，刈夫。
 
   card_recent_post:
     enable: true
@@ -282,12 +282,12 @@ busuanzi:
 # Time difference between publish date and now (網頁運行時間)
 # Formal: Month/Day/Year Time or Year/Month/Day Time
 runtimeshow:
-  enable: false
-  publish_date:
+  enable: true
+  publish_date: 2024/2/24 18:00:00
 
 # Aside widget - Newest Comments
 newest_comments:
-  enable: false
+  enable: true
   sort_order: # Don't modify the setting unless you know how it works
   limit: 6
   storage: 10 # unit: mins, save data to localStorage
@@ -298,7 +298,7 @@ newest_comments:
 
 # Conversion between Traditional and Simplified Chinese (簡繁轉換)
 translate:
-  enable: false
+  enable: true
   # The text of a button
   default: 繁
   # the language of website (1 - Traditional Chinese/ 2 - Simplified Chinese）
@@ -308,7 +308,7 @@ translate:
   # The text of the button when the language is Simplified Chinese
   msgToTraditionalChinese: '繁'
   # The text of the button when the language is Traditional Chinese
-  msgToSimplifiedChinese: '簡'
+  msgToSimplifiedChinese: '简'
 
 # Read Mode (閲讀模式)
 readmode: true

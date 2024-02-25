@@ -107,21 +107,3 @@ deploy:
 aplayer:
   meting: true
   asset_inject: false
-
-permalink_pinyin:
-  enable: true
-  separator: '-' # default: '-'
-
-#看板娘
-live2d:
-  enable: true
-  pluginModelPath: assets/
-  model:
-    use: live2d-widget-model-shizuku    #模板目录，在node_modules里,自己选择
-  display:
-    position: right
-    width: 250
-    height: 500
-  mobile:
-    show: false  #是否在手机进行显示
-
