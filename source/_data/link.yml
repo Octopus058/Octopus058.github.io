@@ -1,4 +1,4 @@
-- class_name: 友情链接
+- class_name: 活学活用
   link_list:
     - name: Hexo
       link: https://hexo.io/zh-tw/
@@ -8,7 +8,7 @@
       link: https://wordpress.com
       avatar: https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/WordPress_blue_logo.svg/225px-WordPress_blue_logo.svg.png
       descr: 一切尽在其中
-- class_name: 好朋友们
+- class_name: 谢谢你们
   link_list:
     - name: 奈茶
       link: https://0days.top
@@ -17,4 +17,8 @@
     - name: oct(迫真)
       link: https://octopus058.wordpress.com
       avatar: https://i.postimg.cc/wj5vp9L3/image.png
+      descr: 我的老博客
+      - name: Jerry
+      link: https://butterfly.js.org/
+      avatar: https://butterfly.js.org/img/avatar.png
       descr: 我的老博客
