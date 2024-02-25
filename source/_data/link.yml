@@ -1,5 +1,4 @@
 - class_name: 友情链接
-  class_desc: 我的足迹
   link_list:
     - name: Hexo
       link: https://hexo.io/zh-tw/
@@ -10,7 +9,6 @@
       avatar: https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/WordPress_blue_logo.svg/225px-WordPress_blue_logo.svg.png
       descr: 一切尽在其中
 - class_name: 好朋友们
-  class_desc: 支持我的人们
   link_list:
     - name: 奈茶
       link: 0days.top
