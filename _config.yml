@@ -111,3 +111,10 @@ aplayer:
 permalink_pinyin:
   enable: true
   separator: '-' # default: '-'
+
+# wordcount (字數統計)
+wordcount:
+  enable: true
+  post_wordcount: true
+  min2read: true
+  total_wordcount: true
