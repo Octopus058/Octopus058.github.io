@@ -2,6 +2,10 @@
 # see https://butterfly.js.org/posts/4aa8abbe/##導航欄設置-Navigation-bar-settings
 # --------------------------------------
 
+css:
+  - https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css
+
+
 nav:
   logo: https://i.postimg.cc/qgfKVbmZ/52.jpg
   display_title: true
@@ -289,7 +293,7 @@ busuanzi:
 # Formal: Month/Day/Year Time or Year/Month/Day Time
 runtimeshow:
   enable: true
-  publish_date: 2024/2/24 18:00:00
+  publish_date: 2024/2/24 00:00:00
 
 # Aside widget - Newest Comments
 newest_comments:
@@ -374,7 +378,7 @@ algolia_search:
 
 # Local search
 local_search:
-  enable: false
+  enable: true
   # Preload the search data when the page loads.
   preload: false
   # Show top n results per article, show all results by setting to -1
@@ -661,7 +665,7 @@ mask:
   footer: true
 
 # the position of bottom right button/default unit: px (右下角按鈕距離底部的距離/默認單位為px)
-rightside_bottom: 100px
+rightside_bottom: 300px
 
 # Enter transitions (開啓網頁進入效果)
 enter_transitions: true
@@ -795,7 +799,7 @@ preloader:
 # wordcount (字數統計)
 # see https://butterfly.js.org/posts/ceeb73f/#字數統計
 wordcount:
-  enable: false
+  enable: true
   post_wordcount: true
   min2read: true
   total_wordcount: true
