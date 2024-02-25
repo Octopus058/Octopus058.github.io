@@ -7,6 +7,13 @@ nav:
   display_title: true
   fixed: false # fixed navigation bar
 
+# wordcount (字數統計)
+wordcount:
+  enable: true
+  post_wordcount: true
+  min2read: true
+  total_wordcount: true
+
 # Menu 目錄
 menu:
   首页: / || fas fa-home
@@ -35,6 +42,7 @@ code_word_wrap: true
    #icon: link || the description || color
 social:
    fas fa-envelope: mailto:237940191l@qq.com || Email || '#4a7dbe'
+   fab fa-qq:  tencent://AddContact/?fromId=45&fromSubId=1&subcmd=all&uin=2379401911&website=www.oicqzone.com || QQ
 
 # Image (圖片設置)
 # --------------------------------------
@@ -149,7 +157,7 @@ toc:
   post: true
   page: false
   number: true
-  expand: false
+  expand: true
   style_simple: false # for post
   scroll_percent: true
 
@@ -682,7 +690,7 @@ canvas_ribbon:
 
 # Fluttering Ribbon (動態彩帶)
 canvas_fluttering_ribbon:
-  enable: false
+  enable: ture
   mobile: false
 
 # canvas_nest
@@ -697,9 +705,10 @@ canvas_nest:
 
 # Mouse click effects: fireworks (鼠標點擊效果: 煙火特效)
 fireworks:
-  enable: false
+  enable: true
   zIndex: 9999 # -1 or 9999
   mobile: false
+
 
 # Mouse click effects: Heart symbol (鼠標點擊效果: 愛心)
 click_heart:
