@@ -442,7 +442,6 @@ gitalk:
   owner: Octopus058
   admin: Octopus058
   option:
-  labels: '20230720'
 
 # valine
 # https://valine.js.org
