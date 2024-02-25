@@ -112,13 +112,6 @@ permalink_pinyin:
   enable: true
   separator: '-' # default: '-'
 
-# wordcount (字數統計)
-wordcount:
-  enable: true
-  post_wordcount: true
-  min2read: true
-  total_wordcount: true
-
 #看板娘
 live2d:
   enable: true
@@ -126,7 +119,7 @@ live2d:
   model:
     use: live2d-widget-model-shizuku    #模板目录，在node_modules里,自己选择
   display:
-    position: left
+    position: right
     width: 200
     height: 400
   mobile:
