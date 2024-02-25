@@ -235,7 +235,7 @@ aside:
       link: https://github.com/Octopus058
   card_announcement:
     enable: true
-    content: 你好！这里是互联网的一个小角落，Oct0pu5的个人博客。我是一名学生，也是QQbot Café的制作者。你可以叫我Oct或我的笔名，刈夫。
+    content: 你好！这里是互联网的一个小角落，Oct0pu5的个人博客。
 
   card_recent_post:
     enable: true
