@@ -103,3 +103,8 @@ theme: butterfly
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: ''
+  
+#添加刚刚用npm下载插件的配置在_config文件中 同时实现全局音乐 将asset_inject设置成false
+aplayer:
+  enable: true
+  asset_inject: false
