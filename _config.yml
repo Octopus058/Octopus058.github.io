@@ -120,8 +120,8 @@ live2d:
     use: live2d-widget-model-shizuku    #模板目录，在node_modules里,自己选择
   display:
     position: right
-    width: 200
-    height: 500
+    width: 150
+    height: 400
   mobile:
     show: false  #是否在手机进行显示
 
