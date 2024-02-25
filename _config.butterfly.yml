@@ -374,7 +374,7 @@ algolia_search:
 
 # Local search
 local_search:
-  enable: false
+  enable: true
   # Preload the search data when the page loads.
   preload: false
   # Show top n results per article, show all results by setting to -1
@@ -398,7 +398,7 @@ docsearch:
 # https://github.com/overtrue/share.js
 sharejs:
   enable: true
-  sites: facebook,twitter,wechat,weibo,qq
+  sites: twitter,wechat,qq
 
 # AddToAny
 # https://www.addtoany.com/
@@ -661,7 +661,7 @@ mask:
   footer: true
 
 # the position of bottom right button/default unit: px (右下角按鈕距離底部的距離/默認單位為px)
-rightside_bottom: 50px
+rightside_bottom: 100px
 
 # Enter transitions (開啓網頁進入效果)
 enter_transitions: true

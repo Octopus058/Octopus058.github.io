@@ -20,6 +20,7 @@
     "hexo-generator-category": "^2.0.0",
     "hexo-generator-index": "^3.0.0",
     "hexo-generator-search": "^2.4.3",
+    "hexo-generator-searchdb": "^1.4.1",
     "hexo-generator-tag": "^2.0.0",
     "hexo-helper-live2d": "^3.1.1",
     "hexo-lazyload-image": "^1.0.13",
