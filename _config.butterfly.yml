@@ -934,7 +934,7 @@ inject:
   head:
     # - <link rel="stylesheet" href="/xxx.css">
   bottom:
-    - '<div class="aplayer no-destroy" data-id="8091731855" data-server="netease" data-type="playlist" data-fixed="true" data-autoplay="true"> </div>'
+    - '<div class="aplayer no-destroy" data-id="9352047247" data-server="netease" data-type="playlist" data-fixed="true" data-autoplay="true"> </div>'
 
 
 # CDN
