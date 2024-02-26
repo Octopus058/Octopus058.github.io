@@ -245,7 +245,7 @@ aside:
       link: https://github.com/Octopus058
   card_announcement:
     enable: true
-    content: 你好！这里是互联网的一个小角落，Oct0pu5的个人博客。
+    content: 如果你打开本博客后图片很糊，请开启科学上网，刷新一遍再关掉，或者等待一段时间加载。目前未发现更好的解决方法:(
 
   card_recent_post:
     enable: true
