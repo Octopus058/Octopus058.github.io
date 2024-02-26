@@ -17,17 +17,10 @@ This repository uses GitHub Actions for CI/CD. You don't need to build your docu
 
 There are two lines to modify in `_config.yml`:
 
-1. (At line 16) Set your site url here. For example, if you use GitHub Page, set url as `https://username.github.io/project`:
+Set your site url here. For example, if you use GitHub Page, set url as `https://username.github.io/project`:
 ```yml
-url: https://jiji.pro/hexo-template
+url: https://Oct0pu5.cn
 ```
-
-2. (At line 107) Set your project name here, if your project name is `username` or `username.github.io`, just remove it at the end of `_config.yml`:
-```yml
-root: /hexo-template
-```
-
-**If you would not like to do so, it cannot work correctly.**
 
 ## Hexo Features
 
