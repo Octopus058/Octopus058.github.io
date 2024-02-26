@@ -114,3 +114,17 @@ search:
   content: true
   format: html
   limit: 10000
+
+#看板娘
+live2d:
+  enable: true
+  pluginModelPath: assets/
+  model:
+    use: live2d-widget-model-shizuku    #模板目录，在node_modules里,自己选择
+  display:
+    position: left
+    width: 300 
+    height: 600
+  mobile:
+    show: false  #是否在手机进行显示
+
