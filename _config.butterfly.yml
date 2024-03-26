@@ -245,7 +245,7 @@ aside:
       link: https://github.com/Octopus058
   card_announcement:
     enable: true
-    content: 如果你打开本博客后图片很糊，请开启科学上网，刷新一遍再关掉，或者等待一段时间加载。目前未发现更好的解决方法:(
+    content: 如果你打开本博客后加载慢/无法载图/无法切换页，请等待一会，刷新两遍再加载。目前未发现更好的解决方法。欢迎加我的QQ2379401911咨询xD
 
   card_recent_post:
     enable: true
