@@ -218,8 +218,8 @@ noticeOutdate:
 footer:
   owner:
     enable: true
-    since: 2020
-  custom_text: And she's buying a <a href="https://music.163.com/#/song?id=29719536">stairway to heaven</a>.
+    since: 2016
+  custom_text: Already 8 years, and he's buying a <a href="https://music.163.com/#/song?id=29719536">stairway to heaven</a>.
   copyright: true # Copyright of theme and framework
 
 # aside (側邊欄)
