@@ -219,7 +219,8 @@ footer:
   owner:
     enable: true
     since: 2016
-  custom_text: Already 8 years, and he's buying a <a href="https://music.163.com/#/song?id=29719536">stairway to heaven</a>.
+  custom_text: Already 8 years, and he's buying a <a href="https://music.163.com/#/song?id=29719536">stairway to heaven</a>.<br>
+  <a href="https://icp.gov.moe/?keyword=20245080" target="_blank">萌ICP备20245080号</a>
   copyright: true # Copyright of theme and framework
 
 # aside (側邊欄)
