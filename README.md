@@ -16,9 +16,3 @@
 - One-command deploy to GitHub Pages, Heroku, etc.
 - Powerful API for limitless extensibility
 - Hundreds of [themes](https://hexo.io/themes/) & [plugins](https://hexo.io/plugins/)
-
-## License
-
-Follows [hexojs/hexo](https://github.com/hexojs/hexo) , use [MIT License](LICENSE).
-
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhexojs%2Fhexo.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhexojs%2Fhexo?ref=badge_large)
