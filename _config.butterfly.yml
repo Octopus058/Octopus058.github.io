@@ -44,7 +44,7 @@ code_word_wrap: true
  # formal:
    #icon: link || the description || color
 social:
-   fas fa-envelope: mailto:237940191l@qq.com || Email || '#4a7dbe'
+   fas fa-envelope: mailto:2379401911@qq.com || Email || '#4a7dbe'
    fab fa-qq:  tencent://AddContact/?fromId=45&fromSubId=1&subcmd=all&uin=2379401911&website=www.oicqzone.com || QQ
 
 # Image (圖片設置)
