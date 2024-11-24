@@ -245,7 +245,7 @@ aside:
       link: https://github.com/Octopus058
   card_announcement:
     enable: true
-    content: 如果你打开本博客后加载慢/无法载图/无法切换页，请等待一会，刷新两遍再加载。目前未发现更好的解决方法。欢迎加我的QQ2379401911咨询xD
+    content: 如果你打开本博客后无法换页，请刷新两次后再试。如果你会解决SSL证书问题，欢迎加我的QQ2379401911！
 
   card_recent_post:
     enable: true
