@@ -9,51 +9,92 @@
 <meta property="article:author" content="Oct0pu5">
 <meta property="article:tag" content="文之">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://s2.loli.net/2024/03/25/S7kUxpnCiyQwVz3.png"><script type="application/ld+json"></script><link rel="shortcut icon" href="https://s2.loli.net/2024/07/21/F4fl6ViKONqhGkL.png"><link rel="canonical" href="https://oct0pu5.cn/page/8/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+<meta name="twitter:image" content="https://s2.loli.net/2024/03/25/S7kUxpnCiyQwVz3.png"><script type="application/ld+json"></script><link rel="shortcut icon" href="https://s2.loli.net/2024/07/21/F4fl6ViKONqhGkL.png"><link rel="canonical" href="https://oct0pu5.cn/page/8/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.1/css/all.min.css"><script>
     (() => {
       
     const saveToLocal = {
       set: (key, value, ttl) => {
-        if (!ttl) return
-        const expiry = Date.now() + ttl * 86400000
-        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
       },
       get: key => {
         const itemStr = localStorage.getItem(key)
-        if (!itemStr) return undefined
-        const { value, expiry } = JSON.parse(itemStr)
-        if (Date.now() > expiry) {
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
           localStorage.removeItem(key)
-          return undefined
         }
-        return value
       }
     }
 
+    const scriptCache = new Map()
+    const cssCache = new Map()
     window.btf = {
       saveToLocal,
-      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
-        const script = document.createElement('script')
-        script.src = url
-        script.async = true
-        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
-        script.onload = script.onreadystatechange = () => {
-          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
         }
-        script.onerror = reject
-        document.head.appendChild(script)
-      }),
-      getCSS: (url, id) => new Promise((resolve, reject) => {
-        const link = document.createElement('link')
-        link.rel = 'stylesheet'
-        link.href = url
-        if (id) link.id = id
-        link.onload = link.onreadystatechange = () => {
-          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
         }
-        link.onerror = reject
-        document.head.appendChild(link)
-      }),
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
       addGlobalFn: (key, fn, name = false, parent = window) => {
         if (!true && key.startsWith('pjax')) return
         const globalFn = parent.globalFn || {}
@@ -64,16 +105,17 @@
     }
   
       
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
       const activateDarkMode = () => {
-        document.documentElement.setAttribute('data-theme', 'dark')
-        if (document.querySelector('meta[name="theme-color"]') !== null) {
-          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
         }
       }
       const activateLightMode = () => {
-        document.documentElement.setAttribute('data-theme', 'light')
-        if (document.querySelector('meta[name="theme-color"]') !== null) {
-          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#ffffff')
         }
       }
 
@@ -126,7 +168,7 @@
   lightbox: 'null',
   Snackbar: undefined,
   infinitegrid: {
-    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
     buttonText: '加载更多'
   },
   isPhotoFigcaption: false,
@@ -142,25 +184,35 @@
   isHighlightShrink: false,
   isToc: false,
   pageType: 'home'
-}</script><meta name="generator" content="Hexo 8.1.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="https://s2.loli.net/2024/03/25/S7kUxpnCiyQwVz3.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">78</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="full_page" id="page-header" style="background-image: url(https://s2.loli.net/2024/03/25/lK2ObNwAvt7nig4.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Octの 小破站</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="site-info"><h1 id="site-title">Octの 小破站</h1><div id="site-subtitle"><span id="subtitle"></span></div><div id="site_social_icons"><a class="social-icon" href="mailto:2379401911@qq.com" rel="external nofollow noreferrer" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=2379401911&amp;website=www.oicqzone.com" rel="external nofollow noreferrer" target="_blank" title="QQ"><i class="fab fa-qq"></i></a></div></div><div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div></header><main class="layout" id="content-inner"><div class="recent-posts nc" id="recent-posts"><div class="recent-post-items"><div class="recent-post-item"><div class="post_cover left"><a href="/20201004/" title="（摘）卓别林《大独裁者》 片尾演讲词"><img class="post-bg" src="https://s2.loli.net/2024/04/21/OFowuB2YfCpPKJV.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="（摘）卓别林《大独裁者》 片尾演讲词"></a></div><div class="recent-post-info"><a class="article-title" href="/20201004/" title="（摘）卓别林《大独裁者》 片尾演讲词">（摘）卓别林《大独裁者》 片尾演讲词</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2020-10-03T16:00:00.000Z" title="发表于 2020-10-04 00:00:00">2020-10-04</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E4%BB%96%E8%AF%B4/">他说</a></span></div><div class="content">&ensp;&ensp;&ensp;&ensp;I’m sorry but I don’t want to be an Emperor, that’s not my business. I don’t want to rule or conquer anyone. I should like to help everyone if possible, Jew, gentile, black man, white. We all want to help one another, human beings are like that. We all want to live by each other’s happiness, not by each other’s misery. We don’t want to hate and despise one another. In this world there is room for everyone and the earth is rich and can provide for everyone.&ensp;&ensp;&...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/20181124/" title="刈夫诗集 茅庐篇三 2018.6-11"><img class="post-bg" src="https://s2.loli.net/2024/06/02/DACnxQBHplk87RF.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 茅庐篇三 2018.6-11"></a></div><div class="recent-post-info"><a class="article-title" href="/20181124/" title="刈夫诗集 茅庐篇三 2018.6-11">刈夫诗集 茅庐篇三 2018.6-11</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2018-11-23T16:00:00.000Z" title="发表于 2018-11-24 00:00:00">2018-11-24</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%8C%85%E5%BA%90/">茅庐</a></span></div><div class="content">2018.11.24  望星空 行人不禁仰起头望着星空 夜晚俱寂 唯存星空一人独明 那四散的光 刺入了行人冰冷的心  光芒冲向前 在心中久久不散 它位佛容不得丝虚伪 要把黑暗肃清干净 终于散尽于茫茫心海  行人直起身 仰起头望着星空 即使面对无尽，深空 也要拔出长剑 一刀斩尽破碎之影  行人受了伤 但他毫不畏惧 在身后的光芒之前 慢慢起了身 再次举起了剑  影子惧也 竟四散去 于是行人则收刀矣 静默放 又望星空  光环绕着行人 行人继续手缩回衣服里      在长街上疾步而行     他仍不时仰起头   望向星空   2018.11.18  远方 远方的星空还黑暗着 只有星星不时眨眨眼 为地上行人指明了路  远方的路灯还明亮着 只有微风不时翻翻身 为地上行人感到了柔  远方的树林还翠绿着 只有叶子不时沙沙响 为地上行人制造了凉  远方的初阳还微薄着 只有楼栋不时耸耸肩 为地上行人提供了家  远方的天空还朦胧着 只有小鸟不时唧唧叫 为地上行人织出了歌  远方的轻雾还飘逸着 只有水珠不时点点滴 为地上行人打湿了身  远方的万物还清晰着 只有理想不时点点头 为地上行人点燃了魂   20...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/20180527/" title="刈夫诗集 茅庐篇二 2018.5"><img class="post-bg" src="https://s2.loli.net/2024/08/25/QO817SIABimHvkt.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 茅庐篇二 2018.5"></a></div><div class="recent-post-info"><a class="article-title" href="/20180527/" title="刈夫诗集 茅庐篇二 2018.5">刈夫诗集 茅庐篇二 2018.5</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2018-05-26T16:00:00.000Z" title="发表于 2018-05-27 00:00:00">2018-05-27</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%8C%85%E5%BA%90/">茅庐</a></span></div><div class="content">2018.5.27  如是我闻（其二） 远方的星点浮在眼前 我想那是希望的曙光 如是我闻 不亦于此乐？  近处的城市映入眼帘 我想那是文明的象征 如是我闻 不亦于此乐乎？  眼前的小鸟飞入脑海 我想那是自由的代表 如是我闻 不亦于此乐矣？  仰望星河 星星闪闪 如是我闻 是当于此评人生矣！   2018.5.24  如是我闻 你是否听闻过 一场惊心动魄的事故 如是我闻 谁不出手相救？  你是否听闻过 一次浑浑噩噩的人生 如是我闻 谁不尽力改变？  你是否听闻过 一个颠倒黑白的世界 如是我闻 谁不做好自己？  天地江山百年在 才人智者年年出 如是我闻 当于今也奋发矣！   2018.5.10  试后有感（其二） 天地间昏暗 日月间朦胧 狂风扫着大地 暴雨打着人群  无数人死去了 毫无意义地死去了 只有极少数的人 躲过这一场浩劫  白纸漫天飞舞 雪花不期而遇 谁知晓 我心何安于此也？   2018.5.10  试后有感 我向远方望去 看见山脉连绵不绝 延伸到天空的尽头 消失在星河之中  我向远方望去 看见森林排列纵横 延伸到大地的尽头 消失在迷雾之中  我将头一转 酒向无尽的黄色 蓦...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/20180506/" title="刈夫诗集 茅庐篇 颂败六首"><img class="post-bg" src="https://s2.loli.net/2024/08/25/MgUmTbFerQwu7pB.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 茅庐篇 颂败六首"></a></div><div class="recent-post-info"><a class="article-title" href="/20180506/" title="刈夫诗集 茅庐篇 颂败六首">刈夫诗集 茅庐篇 颂败六首</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2018-05-05T16:00:00.000Z" title="发表于 2018-05-06 00:00:00">2018-05-06</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%8C%85%E5%BA%90/">茅庐</a></span></div><div class="content">2018.5.6  颂败（其六） 这一生你会经历无数风暴 有时不得不忍耐 但更多时日 不仍要战胜他吗？  我颂扬失败 因为他 我们才会鼓起勇气 同时笑对人生百态 尽你逃避去吧 总有一天你会与他正面相对 总有一天 你会不得不与他战斗  面对失败吧 尽你逃避去吧 至少 还有我颂败   2018.4.6  颂败（其五） 如果再给我一次选择机会 我还要选择失败  谁铁面无私 谁公平正义 谁教训对生活不敬者 谁让你成长 谁是我们的老师  败是最珍贵的东西 也是最独特的东西 无败 何谈成功  请歌颂失败吧 扪心自问 败的问心无愧   2018.4.2  颂败（其四） 清晨的我从梦中醒来 温暖的阳光照在脸上 世界是多么美好  败又如何 过去的事早己飘去 带走了谁的回忆 谁知你会止步于此 只有自己 在败上停下了  败又如何 败 只是过去 努力 才是现在 胜 正是未来  败又如何 无败何来成功 败，是成功的铺路石 为何要在它上徘徊 我只深知 失败是成功之母   2018.4.2  颂败（其三） 森林里分出两条路 我却久久伫立不动 这是成功与失败之路  成功 不到最后不见分晓 走它也许会更骄傲 失败...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/20180417/" title="刈夫诗集 茅庐篇一 2017.1-2018.4"><img class="post-bg" src="https://s2.loli.net/2024/08/25/rhgMLmOoQWuVFvf.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 茅庐篇一 2017.1-2018.4"></a></div><div class="recent-post-info"><a class="article-title" href="/20180417/" title="刈夫诗集 茅庐篇一 2017.1-2018.4">刈夫诗集 茅庐篇一 2017.1-2018.4</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2018-04-16T16:00:00.000Z" title="发表于 2018-04-17 00:00:00">2018-04-17</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%8C%85%E5%BA%90/">茅庐</a></span></div><div class="content">2018.4.17  一世 一生一数且当路， 未谋先雨不乱乎。 为得寻斯荒一世， 回看才见， 糊涂！ 切莫麦城走一涂。   2018.4.2  歌颂生命 再见 我的故乡 这里有熟悉的面孔 这里有曾经的美好时光 现在我要去实现理想  我跑过一座繁华都市 灯红酒绿 车水马龙 我渴望生活于此 却继续漂泊  我路过片葱郁绿洲 芳草萋萋 十分诱人 我渴望生活于此 却仍继续漂泊  前方是一地荒凉沙漠 寸草不生 一片凄凉 那是我的理想 一片需要我的沙漠  心中有团燃烧的火 为了一片绿色 我不再向往美好 用沙哑之声歌颂生命   2018.3.6  你就要到此放弃了吗 世界在不停转动 人群在不停涌动 一切都是快节奏 世界再大也要归家 细细品茶  我是否该放弃了  诗纵我情 这只是生活一部分 你就要到此放弃了吗？   2018.3.6  二月四日考场作 笔落惊风雨， 试成泣鬼神。 挥笔三尺剑， 劈砍尽真题！   2018.3.6  无题 溪流汇入海， 梦想自未来。 路从脚下延， 希望愿常在。   2017.10.15  敦刻尔克 有一年的一天，有一场大撤退 它叫敦刻尔克，是英国的耻辱 在这场撤退中，...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/20170127/" title="刈夫诗集 茅庐篇 万物之计"><img class="post-bg" src="https://s2.loli.net/2024/08/25/aRXMHjIseFKV1Am.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 茅庐篇 万物之计"></a></div><div class="recent-post-info"><a class="article-title" href="/20170127/" title="刈夫诗集 茅庐篇 万物之计">刈夫诗集 茅庐篇 万物之计</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2017-01-26T16:00:00.000Z" title="发表于 2017-01-27 00:00:00">2017-01-27</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%8C%85%E5%BA%90/">茅庐</a></span></div><div class="content"> 万物之计 察天下万物，必有一计。 心阔为常道，非以蝇利。 气和仍为重，无以便益。 心情且相当，不快而亡。 希望若是无，一路拥堵。 生活仍如洗，志不可短。 恒心不可缺，万事能成。 切莫贪名利，亡不足矣。 嚣张如败战，亡国之音。 妄想不可取，荒废人生。 脚踏才实地，大步登天。 非健全之人，开朗心情。 真切才成功，虚伪其恶。 满纸荒唐言，切莫胡谄。 所有为人生，一诗足矣。 </div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/20160923/" title="刈夫诗集 茅庐篇〇 2016.9.23"><img class="post-bg" src="https://s2.loli.net/2024/08/25/kmGf2UVJhiHjnld.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 茅庐篇〇 2016.9.23"></a></div><div class="recent-post-info"><a class="article-title" href="/20160923/" title="刈夫诗集 茅庐篇〇 2016.9.23">刈夫诗集 茅庐篇〇 2016.9.23</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2016-09-22T16:00:00.000Z" title="发表于 2016-09-23 00:00:00">2016-09-23</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%8C%85%E5%BA%90/">茅庐</a></span></div><div class="content"> 人生如雨 幼年观雨景山上，察满天卷帘。 少年听雨道楼中，闻无垠色彩。 青年采雨青莲间，持天中仙灵。 壮年卧雨客舟里，捧玉餐星辰。 益年尝雨天方下，似雨比清幽。 暮年视雨阔江长，鬓已灿若也。   &ensp;&ensp;&ensp;&ensp;2016年是极为特殊的一年，这一年里我写下了人生中的第一首诗（不算前三个练笔的话），正式开启了我的文学生涯，也就是第一阶段“茅庐”的起点。后面还会有很多阶段，每个阶段都代表不同的创作风格。我时常感谢自己热爱写诗，同样，无理由的热爱生活。</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/20160804/" title="刈夫诗集 起点 沧海三首"><img class="post-bg" src="https://s2.loli.net/2024/08/25/uHlPZWasb1C85UX.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 起点 沧海三首"></a></div><div class="recent-post-info"><a class="article-title" href="/20160804/" title="刈夫诗集 起点 沧海三首">刈夫诗集 起点 沧海三首</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2016-08-03T16:00:00.000Z" title="发表于 2016-08-04 00:00:00">2016-08-04</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%B5%B7%E7%82%B9/">起点</a></span></div><div class="content">2016.8.4  智 闪亮之珠，汇集为智。 天各一方，志同道合。 智以为多，明镜高悬。 何为明珠，其何吾眼。 恰似闪慧，又如繁星。 生机大地，终有天日。 发美善思，智首为一。 末之要义，吾知为汝！   2016.8.4  自信 远头之慧，轮化为汝。 汝吾若矣，从心至界。 万物不敌，虽败犹荣。 何偶唯独，万物似人。 何以犹荣，汝之信也。 其可之自，却无他责。 自明当好，灰厉且败。 但其两者，缺一不可。 如若轻察，不甚后果！   2016.6.17  战昆仑 冥冥之胜，窥探凡生。 凌泽风粼，三地争雄。 将士越岭，冲锋陷阵。 城车破阵，资重辈别。 壮士逃散，兵衰战败。 名门之后，尘沙飞扬。 铁器占地，苦士沉城。 何时等年，洪踌飞涛。 名利无重，官胜不极。 星光灿烂，民且聊生！   人生中第一次写练笔，灵感来自曹操的《观沧海》。 </div></div></div></div><nav id="pagination"><div class="pagination"><a class="extend prev" rel="prev" href="/page/7/#content-inner"><i class="fas fa-chevron-left fa-fw"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/#content-inner">7</a><span class="page-number current">8</span></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="https://s2.loli.net/2024/03/25/S7kUxpnCiyQwVz3.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Oct0pu5</div><div class="author-info-description">零丁汪洋无数士 核舟轻酌念小诗</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">78</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/Octopus058"><i class="fab fa-github"></i><span>Github</span></a><div class="card-info-social-icons"><a class="social-icon" href="mailto:2379401911@qq.com" rel="external nofollow noreferrer" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=2379401911&amp;website=www.oicqzone.com" rel="external nofollow noreferrer" target="_blank" title="QQ"><i class="fab fa-qq"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">如果你打开本博客后无法换页，请刷新两次后再试。如果你会解决SSL证书问题，欢迎加我的QQ2379401911！</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/20251026/" title="刈夫诗集 星空篇 小气者说"><img src="https://s2.loli.net/2025/10/26/XVRLIOPms2oJMN5.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 星空篇 小气者说"/></a><div class="content"><a class="title" href="/20251026/" title="刈夫诗集 星空篇 小气者说">刈夫诗集 星空篇 小气者说</a><time datetime="2025-10-25T16:00:00.000Z" title="发表于 2025-10-26 00:00:00">2025-10-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/20250704/" title="吃"><img src="https://s2.loli.net/2025/07/05/XFiEz7yN8RDk4VK.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="吃"/></a><div class="content"><a class="title" href="/20250704/" title="吃">吃</a><time datetime="2025-07-03T16:00:00.000Z" title="发表于 2025-07-04 00:00:00">2025-07-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/20250626/" title="刈夫诗集 永远篇 明天"><img src="https://s2.loli.net/2025/07/05/LPDruWmGMFS1wJ4.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 永远篇 明天"/></a><div class="content"><a class="title" href="/20250626/" title="刈夫诗集 永远篇 明天">刈夫诗集 永远篇 明天</a><time datetime="2025-06-25T16:00:00.000Z" title="发表于 2025-06-26 00:00:00">2025-06-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/20250309/" title="刈夫诗集 星空篇 升太阳"><img src="https://s2.loli.net/2025/03/11/CYQmowJLFpizslA.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 星空篇 升太阳"/></a><div class="content"><a class="title" href="/20250309/" title="刈夫诗集 星空篇 升太阳">刈夫诗集 星空篇 升太阳</a><time datetime="2025-03-08T16:00:00.000Z" title="发表于 2025-03-09 00:00:00">2025-03-09</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/20241227/" title="刈夫诗集 星空篇 满江红·圣诞后"><img src="https://s2.loli.net/2025/01/01/zBJeqyoba2fx9TD.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 星空篇 满江红·圣诞后"/></a><div class="content"><a class="title" href="/20241227/" title="刈夫诗集 星空篇 满江红·圣诞后">刈夫诗集 星空篇 满江红·圣诞后</a><time datetime="2024-12-26T16:00:00.000Z" title="发表于 2024-12-27 00:00:00">2024-12-27</time></div></div></div></div><div class="card-widget card-categories"><div class="item-headline">
-            <i class="fas fa-folder-open"></i>
-            <span>分类</span>
-            <a class="card-more-btn" href="/categories/" title="查看更多">
-      <i class="fas fa-angle-right"></i></a>
-          </div>
+}</script><meta name="generator" content="Hexo 8.1.2"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="https://s2.loli.net/2024/03/25/S7kUxpnCiyQwVz3.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">80</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="full_page" id="page-header" style="background-image: url(https://s2.loli.net/2024/03/25/lK2ObNwAvt7nig4.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Octの 小破站</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="site-info"><h1 id="site-title">Octの 小破站</h1><div id="site-subtitle"><span id="subtitle"></span></div><div id="site_social_icons"><a class="social-icon" href="mailto:2379401911@qq.com" rel="external nofollow noreferrer" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=2379401911&amp;website=www.oicqzone.com" rel="external nofollow noreferrer" target="_blank" title="QQ"><i class="fab fa-qq"></i></a></div></div><div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div></header><main class="layout" id="content-inner"><div class="recent-posts nc" id="recent-posts"><div class="recent-post-items"><div class="recent-post-item"><div class="post_cover left"><a href="/20210308/" title="刈夫诗集 世界篇 再赡养人类 2021.3.8"><img class="post-bg" src="https://s2.loli.net/2024/03/29/uprB7W2qgzDihoH.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 世界篇 再赡养人类 2021.3.8"></a></div><div class="recent-post-info"><a class="article-title" href="/20210308/" title="刈夫诗集 世界篇 再赡养人类 2021.3.8">刈夫诗集 世界篇 再赡养人类 2021.3.8</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-03-07T16:00:00.000Z" title="发表于 2021-03-08 00:00:00">2021-03-08</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E4%B8%96%E7%95%8C/">世界</a></span></div><div class="content"> 再赡养人类 你说你无知，因为无知者无罪 天知地知你知我却不知对或不对 直到信息时代，你应该感到羞愧 富于贫言：“停止交易，无论内鬼”  一万三千五百张纱钞票烧开的水 这个世界已不存在行贿和受贿 所有人都一样，即使化成灰 因为你我都是一类  当你抬头仰望星空，会不会被强迫纳税 一个人把握你的账户，只因偷喝水 历史发展进程中我们的运气总是越来越背 贫富分化让一个人静静沉睡 而百分之九十九的在无尽的黑洞中下坠  何时人们能拎起自己的战锤 去把和平的梦境彻底打碎 于天地中尽情陶醉 至此 每况愈下的世界才懂得以和为贵  </div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/20201119/" title="刈夫诗集 世界篇〇 2020.11.19"><img class="post-bg" src="https://s2.loli.net/2024/03/26/TKwGyNb9nvRVBlS.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 世界篇〇 2020.11.19"></a></div><div class="recent-post-info"><a class="article-title" href="/20201119/" title="刈夫诗集 世界篇〇 2020.11.19">刈夫诗集 世界篇〇 2020.11.19</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2020-11-18T16:00:00.000Z" title="发表于 2020-11-19 00:00:00">2020-11-19</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E4%B8%96%E7%95%8C/">世界</a></span></div><div class="content"> 忆昔 你在夜的那边盼着我的归期 却是平生里最后的一次相离 是我无力在银色长河里寻觅 时光迷离，生命只月明星稀 俯首案间，只换得一声长息 不识愁绪，风暴竟涌入心底 人间烟火，不过是一路向西   &ensp;&ensp;&ensp;&ensp;这是我高中时期作的第一首诗。当时年级在搞诗歌活动，我就写了一句”人间烟火，不过是一路向西。”后来就把这件事渐渐淡忘了，直至11月18日，有个人向我要生日礼物，我实在没有什么好送的，就又想起了写的那句，终于写成了一整首，在19日早上送给了那个人。起初，我写了一个藏头的骂诗，被她发现了，印象很不好，后来又重新送了原版，也弥补不了我的过错。现在想来只有两个字，后悔……  写于2022.3.8，最后编辑于2024.3.26 </div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/20201004/" title="（摘）卓别林《大独裁者》 片尾演讲词"><img class="post-bg" src="https://s2.loli.net/2024/04/21/OFowuB2YfCpPKJV.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="（摘）卓别林《大独裁者》 片尾演讲词"></a></div><div class="recent-post-info"><a class="article-title" href="/20201004/" title="（摘）卓别林《大独裁者》 片尾演讲词">（摘）卓别林《大独裁者》 片尾演讲词</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2020-10-03T16:00:00.000Z" title="发表于 2020-10-04 00:00:00">2020-10-04</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E4%BB%96%E8%AF%B4/">他说</a></span></div><div class="content">&ensp;&ensp;&ensp;&ensp;I’m sorry but I don’t want to be an Emperor, that’s not my business. I don’t want to rule or conquer anyone. I should like to help everyone if possible, Jew, gentile, black man, white. We all want to help one another, human beings are like that. We all want to live by each other’s happiness, not by each other’s misery. We don’t want to hate and despise one another. In this world there is room for everyone and the earth is rich and can provide for everyone.&ensp;&ensp;&...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/20181124/" title="刈夫诗集 茅庐篇三 2018.6-11"><img class="post-bg" src="https://s2.loli.net/2024/06/02/DACnxQBHplk87RF.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 茅庐篇三 2018.6-11"></a></div><div class="recent-post-info"><a class="article-title" href="/20181124/" title="刈夫诗集 茅庐篇三 2018.6-11">刈夫诗集 茅庐篇三 2018.6-11</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2018-11-23T16:00:00.000Z" title="发表于 2018-11-24 00:00:00">2018-11-24</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%8C%85%E5%BA%90/">茅庐</a></span></div><div class="content">2018.11.24  望星空 行人不禁仰起头望着星空 夜晚俱寂 唯存星空一人独明 那四散的光 刺入了行人冰冷的心  光芒冲向前 在心中久久不散 它位佛容不得丝虚伪 要把黑暗肃清干净 终于散尽于茫茫心海  行人直起身 仰起头望着星空 即使面对无尽，深空 也要拔出长剑 一刀斩尽破碎之影  行人受了伤 但他毫不畏惧 在身后的光芒之前 慢慢起了身 再次举起了剑  影子惧也 竟四散去 于是行人则收刀矣 静默放 又望星空  光环绕着行人 行人继续手缩回衣服里      在长街上疾步而行     他仍不时仰起头   望向星空   2018.11.18  远方 远方的星空还黑暗着 只有星星不时眨眨眼 为地上行人指明了路  远方的路灯还明亮着 只有微风不时翻翻身 为地上行人感到了柔  远方的树林还翠绿着 只有叶子不时沙沙响 为地上行人制造了凉  远方的初阳还微薄着 只有楼栋不时耸耸肩 为地上行人提供了家  远方的天空还朦胧着 只有小鸟不时唧唧叫 为地上行人织出了歌  远方的轻雾还飘逸着 只有水珠不时点点滴 为地上行人打湿了身  远方的万物还清晰着 只有理想不时点点头 为地上行人点燃了魂   20...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/20180527/" title="刈夫诗集 茅庐篇二 2018.5"><img class="post-bg" src="https://s2.loli.net/2024/08/25/QO817SIABimHvkt.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 茅庐篇二 2018.5"></a></div><div class="recent-post-info"><a class="article-title" href="/20180527/" title="刈夫诗集 茅庐篇二 2018.5">刈夫诗集 茅庐篇二 2018.5</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2018-05-26T16:00:00.000Z" title="发表于 2018-05-27 00:00:00">2018-05-27</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%8C%85%E5%BA%90/">茅庐</a></span></div><div class="content">2018.5.27  如是我闻（其二） 远方的星点浮在眼前 我想那是希望的曙光 如是我闻 不亦于此乐？  近处的城市映入眼帘 我想那是文明的象征 如是我闻 不亦于此乐乎？  眼前的小鸟飞入脑海 我想那是自由的代表 如是我闻 不亦于此乐矣？  仰望星河 星星闪闪 如是我闻 是当于此评人生矣！   2018.5.24  如是我闻 你是否听闻过 一场惊心动魄的事故 如是我闻 谁不出手相救？  你是否听闻过 一次浑浑噩噩的人生 如是我闻 谁不尽力改变？  你是否听闻过 一个颠倒黑白的世界 如是我闻 谁不做好自己？  天地江山百年在 才人智者年年出 如是我闻 当于今也奋发矣！   2018.5.10  试后有感（其二） 天地间昏暗 日月间朦胧 狂风扫着大地 暴雨打着人群  无数人死去了 毫无意义地死去了 只有极少数的人 躲过这一场浩劫  白纸漫天飞舞 雪花不期而遇 谁知晓 我心何安于此也？   2018.5.10  试后有感 我向远方望去 看见山脉连绵不绝 延伸到天空的尽头 消失在星河之中  我向远方望去 看见森林排列纵横 延伸到大地的尽头 消失在迷雾之中  我将头一转 酒向无尽的黄色 蓦...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/20180506/" title="刈夫诗集 茅庐篇 颂败六首"><img class="post-bg" src="https://s2.loli.net/2024/08/25/MgUmTbFerQwu7pB.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 茅庐篇 颂败六首"></a></div><div class="recent-post-info"><a class="article-title" href="/20180506/" title="刈夫诗集 茅庐篇 颂败六首">刈夫诗集 茅庐篇 颂败六首</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2018-05-05T16:00:00.000Z" title="发表于 2018-05-06 00:00:00">2018-05-06</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%8C%85%E5%BA%90/">茅庐</a></span></div><div class="content">2018.5.6  颂败（其六） 这一生你会经历无数风暴 有时不得不忍耐 但更多时日 不仍要战胜他吗？  我颂扬失败 因为他 我们才会鼓起勇气 同时笑对人生百态 尽你逃避去吧 总有一天你会与他正面相对 总有一天 你会不得不与他战斗  面对失败吧 尽你逃避去吧 至少 还有我颂败   2018.4.6  颂败（其五） 如果再给我一次选择机会 我还要选择失败  谁铁面无私 谁公平正义 谁教训对生活不敬者 谁让你成长 谁是我们的老师  败是最珍贵的东西 也是最独特的东西 无败 何谈成功  请歌颂失败吧 扪心自问 败的问心无愧   2018.4.2  颂败（其四） 清晨的我从梦中醒来 温暖的阳光照在脸上 世界是多么美好  败又如何 过去的事早己飘去 带走了谁的回忆 谁知你会止步于此 只有自己 在败上停下了  败又如何 败 只是过去 努力 才是现在 胜 正是未来  败又如何 无败何来成功 败，是成功的铺路石 为何要在它上徘徊 我只深知 失败是成功之母   2018.4.2  颂败（其三） 森林里分出两条路 我却久久伫立不动 这是成功与失败之路  成功 不到最后不见分晓 走它也许会更骄傲 失败...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/20180417/" title="刈夫诗集 茅庐篇一 2017.1-2018.4"><img class="post-bg" src="https://s2.loli.net/2024/08/25/rhgMLmOoQWuVFvf.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 茅庐篇一 2017.1-2018.4"></a></div><div class="recent-post-info"><a class="article-title" href="/20180417/" title="刈夫诗集 茅庐篇一 2017.1-2018.4">刈夫诗集 茅庐篇一 2017.1-2018.4</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2018-04-16T16:00:00.000Z" title="发表于 2018-04-17 00:00:00">2018-04-17</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%8C%85%E5%BA%90/">茅庐</a></span></div><div class="content">2018.4.17  一世 一生一数且当路， 未谋先雨不乱乎。 为得寻斯荒一世， 回看才见， 糊涂！ 切莫麦城走一涂。   2018.4.2  歌颂生命 再见 我的故乡 这里有熟悉的面孔 这里有曾经的美好时光 现在我要去实现理想  我跑过一座繁华都市 灯红酒绿 车水马龙 我渴望生活于此 却继续漂泊  我路过片葱郁绿洲 芳草萋萋 十分诱人 我渴望生活于此 却仍继续漂泊  前方是一地荒凉沙漠 寸草不生 一片凄凉 那是我的理想 一片需要我的沙漠  心中有团燃烧的火 为了一片绿色 我不再向往美好 用沙哑之声歌颂生命   2018.3.6  你就要到此放弃了吗 世界在不停转动 人群在不停涌动 一切都是快节奏 世界再大也要归家 细细品茶  我是否该放弃了  诗纵我情 这只是生活一部分 你就要到此放弃了吗？   2018.3.6  二月四日考场作 笔落惊风雨， 试成泣鬼神。 挥笔三尺剑， 劈砍尽真题！   2018.3.6  无题 溪流汇入海， 梦想自未来。 路从脚下延， 希望愿常在。   2017.10.15  敦刻尔克 有一年的一天，有一场大撤退 它叫敦刻尔克，是英国的耻辱 在这场撤退中，...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/20170127/" title="刈夫诗集 茅庐篇 万物之计"><img class="post-bg" src="https://s2.loli.net/2024/08/25/aRXMHjIseFKV1Am.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 茅庐篇 万物之计"></a></div><div class="recent-post-info"><a class="article-title" href="/20170127/" title="刈夫诗集 茅庐篇 万物之计">刈夫诗集 茅庐篇 万物之计</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2017-01-26T16:00:00.000Z" title="发表于 2017-01-27 00:00:00">2017-01-27</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%8C%85%E5%BA%90/">茅庐</a></span></div><div class="content"> 万物之计 察天下万物，必有一计。 心阔为常道，非以蝇利。 气和仍为重，无以便益。 心情且相当，不快而亡。 希望若是无，一路拥堵。 生活仍如洗，志不可短。 恒心不可缺，万事能成。 切莫贪名利，亡不足矣。 嚣张如败战，亡国之音。 妄想不可取，荒废人生。 脚踏才实地，大步登天。 非健全之人，开朗心情。 真切才成功，虚伪其恶。 满纸荒唐言，切莫胡谄。 所有为人生，一诗足矣。 </div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/20160923/" title="刈夫诗集 茅庐篇〇 2016.9.23"><img class="post-bg" src="https://s2.loli.net/2024/08/25/kmGf2UVJhiHjnld.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 茅庐篇〇 2016.9.23"></a></div><div class="recent-post-info"><a class="article-title" href="/20160923/" title="刈夫诗集 茅庐篇〇 2016.9.23">刈夫诗集 茅庐篇〇 2016.9.23</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2016-09-22T16:00:00.000Z" title="发表于 2016-09-23 00:00:00">2016-09-23</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%8C%85%E5%BA%90/">茅庐</a></span></div><div class="content"> 人生如雨 幼年观雨景山上，察满天卷帘。 少年听雨道楼中，闻无垠色彩。 青年采雨青莲间，持天中仙灵。 壮年卧雨客舟里，捧玉餐星辰。 益年尝雨天方下，似雨比清幽。 暮年视雨阔江长，鬓已灿若也。   &ensp;&ensp;&ensp;&ensp;2016年是极为特殊的一年，这一年里我写下了人生中的第一首诗（不算前三个练笔的话），正式开启了我的文学生涯，也就是第一阶段“茅庐”的起点。后面还会有很多阶段，每个阶段都代表不同的创作风格。我时常感谢自己热爱写诗，同样，无理由的热爱生活。</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/20160804/" title="刈夫诗集 起点 沧海三首"><img class="post-bg" src="https://s2.loli.net/2024/08/25/uHlPZWasb1C85UX.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 起点 沧海三首"></a></div><div class="recent-post-info"><a class="article-title" href="/20160804/" title="刈夫诗集 起点 沧海三首">刈夫诗集 起点 沧海三首</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2016-08-03T16:00:00.000Z" title="发表于 2016-08-04 00:00:00">2016-08-04</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%B5%B7%E7%82%B9/">起点</a></span></div><div class="content">2016.8.4  智 闪亮之珠，汇集为智。 天各一方，志同道合。 智以为多，明镜高悬。 何为明珠，其何吾眼。 恰似闪慧，又如繁星。 生机大地，终有天日。 发美善思，智首为一。 末之要义，吾知为汝！   2016.8.4  自信 远头之慧，轮化为汝。 汝吾若矣，从心至界。 万物不敌，虽败犹荣。 何偶唯独，万物似人。 何以犹荣，汝之信也。 其可之自，却无他责。 自明当好，灰厉且败。 但其两者，缺一不可。 如若轻察，不甚后果！   2016.6.17  战昆仑 冥冥之胜，窥探凡生。 凌泽风粼，三地争雄。 将士越岭，冲锋陷阵。 城车破阵，资重辈别。 壮士逃散，兵衰战败。 名门之后，尘沙飞扬。 铁器占地，苦士沉城。 何时等年，洪踌飞涛。 名利无重，官胜不极。 星光灿烂，民且聊生！   人生中第一次写练笔，灵感来自曹操的《观沧海》。 </div></div></div></div><nav id="pagination"><div class="pagination"><a class="extend prev" rel="prev" href="/page/7/#content-inner"><i class="fas fa-chevron-left fa-fw"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/#content-inner">7</a><span class="page-number current">8</span></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="https://s2.loli.net/2024/03/25/S7kUxpnCiyQwVz3.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Oct0pu5</div><div class="author-info-description">零丁汪洋无数士 核舟轻酌念小诗</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">80</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/Octopus058"><i class="fab fa-github"></i><span>Github</span></a><div class="card-info-social-icons"><a class="social-icon" href="mailto:2379401911@qq.com" rel="external nofollow noreferrer" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=2379401911&amp;website=www.oicqzone.com" rel="external nofollow noreferrer" target="_blank" title="QQ"><i class="fab fa-qq"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">如果你打开本博客后无法换页，请刷新两次后再试。如果你会解决SSL证书问题，欢迎加我的QQ2379401911！</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/20260902/" title="论“嘉豪”"><img src="https://www.picgo.net/image/8FBAyp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="论“嘉豪”"/></a><div class="content"><a class="title" href="/20260902/" title="论“嘉豪”">论“嘉豪”</a><time datetime="2026-09-01T16:00:00.000Z" title="发表于 2026-09-02 00:00:00">2026-09-02</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/20260611/" title="刈夫诗集 永远篇 鹅说"><img src="https://www.picgo.net/image/8FBhId" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 永远篇 鹅说"/></a><div class="content"><a class="title" href="/20260611/" title="刈夫诗集 永远篇 鹅说">刈夫诗集 永远篇 鹅说</a><time datetime="2026-06-10T16:00:00.000Z" title="发表于 2026-06-11 00:00:00">2026-06-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/20251026/" title="刈夫诗集 永远篇 小气者说"><img src="https://s2.loli.net/2025/10/26/XVRLIOPms2oJMN5.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 永远篇 小气者说"/></a><div class="content"><a class="title" href="/20251026/" title="刈夫诗集 永远篇 小气者说">刈夫诗集 永远篇 小气者说</a><time datetime="2025-10-25T16:00:00.000Z" title="发表于 2025-10-26 00:00:00">2025-10-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/20250704/" title="吃"><img src="https://s2.loli.net/2025/07/05/XFiEz7yN8RDk4VK.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="吃"/></a><div class="content"><a class="title" href="/20250704/" title="吃">吃</a><time datetime="2025-07-03T16:00:00.000Z" title="发表于 2025-07-04 00:00:00">2025-07-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/20250626/" title="刈夫诗集 永远篇 明天"><img src="https://s2.loli.net/2025/07/05/LPDruWmGMFS1wJ4.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="刈夫诗集 永远篇 明天"/></a><div class="content"><a class="title" href="/20250626/" title="刈夫诗集 永远篇 明天">刈夫诗集 永远篇 明天</a><time datetime="2025-06-25T16:00:00.000Z" title="发表于 2025-06-26 00:00:00">2025-06-26</time></div></div></div></div><div class="card-widget card-categories"><div class="item-headline"><i class="fas fa-folder-open"></i><span>分类</span><a class="card-more-btn" href="/categories/" title="查看更多">
+      <i class="fas fa-angle-right"></i></a></div>
           <ul class="card-category-list" id="aside-cat-list">
-            <li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E4%B8%96%E7%95%8C/"><span class="card-category-list-name">世界</span><span class="card-category-list-count">9</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E4%BB%96%E8%AF%B4/"><span class="card-category-list-name">他说</span><span class="card-category-list-count">7</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%8E%A2%E7%B4%A2/"><span class="card-category-list-name">探索</span><span class="card-category-list-count">3</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%98%9F%E7%A9%BA/"><span class="card-category-list-name">星空</span><span class="card-category-list-count">25</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%B0%B8%E8%BF%9C/"><span class="card-category-list-name">永远</span><span class="card-category-list-count">1</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E8%8C%85%E5%BA%90/"><span class="card-category-list-name">茅庐</span><span class="card-category-list-count">6</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E8%A1%8C%E7%A9%BA/"><span class="card-category-list-name">行空</span><span class="card-category-list-count">2</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E8%B5%B7%E7%82%B9/"><span class="card-category-list-name">起点</span><span class="card-category-list-count">1</span></a></li>
+            <li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E4%B8%96%E7%95%8C/"><span class="card-category-list-name">世界</span><span class="card-category-list-count">9</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E4%BB%96%E8%AF%B4/"><span class="card-category-list-name">他说</span><span class="card-category-list-count">7</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%8E%A2%E7%B4%A2/"><span class="card-category-list-name">探索</span><span class="card-category-list-count">3</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%98%9F%E7%A9%BA/"><span class="card-category-list-name">星空</span><span class="card-category-list-count">24</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%B0%B8%E8%BF%9C/"><span class="card-category-list-name">永远</span><span class="card-category-list-count">3</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E8%8C%85%E5%BA%90/"><span class="card-category-list-name">茅庐</span><span class="card-category-list-count">6</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E8%A1%8C%E7%A9%BA/"><span class="card-category-list-name">行空</span><span class="card-category-list-count">2</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E8%B5%B7%E7%82%B9/"><span class="card-category-list-name">起点</span><span class="card-category-list-count">1</span></a></li>
           </ul></div><div class="card-widget card-archives">
-    <div class="item-headline">
-      <i class="fas fa-archive"></i>
-      <span>归档</span>
-      <a class="card-more-btn" href="/archives/"
+    <div class="item-headline"><i class="fas fa-archive"></i><span>归档</span><a class="card-more-btn" href="/archives/"
             title="查看更多">
             <i class="fas fa-angle-right"></i>
-          </a>
-    </div>
+          </a></div>
   
     <ul class="card-archive-list">
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/09/">
+            <span class="card-archive-list-date">
+              九月 2026
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/06/">
+            <span class="card-archive-list-date">
+              六月 2026
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
       
         <li class="card-archive-list-item">
           <a class="card-archive-list-link" href="/archives/2025/10/">
@@ -216,26 +268,8 @@
           </a>
         </li>
       
-        <li class="card-archive-list-item">
-          <a class="card-archive-list-link" href="/archives/2024/10/">
-            <span class="card-archive-list-date">
-              十月 2024
-            </span>
-            <span class="card-archive-list-count">3</span>
-          </a>
-        </li>
-      
-        <li class="card-archive-list-item">
-          <a class="card-archive-list-link" href="/archives/2024/09/">
-            <span class="card-archive-list-date">
-              九月 2024
-            </span>
-            <span class="card-archive-list-count">1</span>
-          </a>
-        </li>
-      
     </ul>
-  </div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站信息</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">78</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">67.3k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总浏览量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2025-10-26T12:03:36.275Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2016 - 2025 By Oct0pu5</span></div><div class="footer_custom_text">Already 8 years, and he's buying a <a target="_blank" rel="noopener external nofollow noreferrer" href="https://music.163.com/#/song?id=29719536">stairway to heaven</a>.<br><a href="https://icp.gov.moe/?keyword=20245080" rel="external nofollow noreferrer" target="_blank">萌ICP备20245080号</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><script src="/js/tw_cn.js?v=5.5.1"></script><div class="js-pjax"><script>window.typedJSFn = {
+  </div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站信息</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">80</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">69.9k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总浏览量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2026-09-03T07:33:34.239Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2016 - 2026 By Oct0pu5</span></div><div class="footer_custom_text">Already 8 years, and he's buying a <a target="_blank" rel="noopener external nofollow noreferrer" href="https://music.163.com/#/song?id=29719536">stairway to heaven</a>.<br><a href="https://icp.gov.moe/?keyword=20245080" rel="external nofollow noreferrer" target="_blank">萌ICP备20245080号</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.7.0"></script><script src="/js/main.js?v=5.7.0"></script><script src="/js/tw_cn.js?v=5.7.0"></script><div class="js-pjax"><script>window.typedJSFn = {
   init: str => {
     window.typed = new Typed('#subtitle', Object.assign({
       strings: str,
@@ -250,7 +284,7 @@
       if (typeof Typed === 'function') {
         subtitleType()
       } else {
-        btf.getScript('https://cdn.jsdelivr.net/npm/typed.js@2.1.0/dist/typed.umd.min.js').then(subtitleType)
+        btf.getScript('https://cdn.jsdelivr.net/npm/typed.js@3.0.0/dist/typed.umd.min.js').then(subtitleType)
       }
     } else {
       subtitleType()
@@ -277,30 +311,340 @@
     }
   }
 }
-btf.addGlobalFn('pjaxSendOnce', () => { typed.destroy() }, 'typedDestroy')
+btf.addGlobalFn('pjaxSendOnce', () => { typed && typed.destroy() }, 'typedDestroy')
 </script><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.innerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    // Clean up previous event listeners and pending frames
+    if (wrap.__mermaidAbortController) {
+      wrap.__mermaidAbortController.abort()
+      if (wrap.__mermaidRafId) cancelAnimationFrame(wrap.__mermaidRafId)
+    }
+    const ac = new AbortController()
+    wrap.__mermaidAbortController = ac
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+    // Disable default gestures to prevent scroll chaining and pinch-zoom penetration in Chrome
+    svg.style.touchAction = 'none'
+
+    // Cache BoundingClientRect, throttled on scroll to reduce reflow
+    let cachedRect = svg.getBoundingClientRect()
+    let rectDirty = false
+    const markRectDirty = () => { rectDirty = true }
+    window.addEventListener('resize', markRectDirty, { signal: ac.signal })
+    window.addEventListener('scroll', markRectDirty, { signal: ac.signal, capture: true })
+    const getRect = () => {
+      if (rectDirty) {
+        cachedRect = svg.getBoundingClientRect()
+        rectDirty = false
+      }
+      return cachedRect
+    }
+
+    // Precompute clamp bounds from initial viewBox
+    const minW = initVb[2] * 0.1
+    const maxW = initVb[2] * 10
+    const minH = initVb[3] * 0.1
+    const maxH = initVb[3] * 10
+    const clampVb = vb => {
+      const out = vb.slice()
+      out[2] = clamp(out[2], minW, maxW)
+      out[3] = clamp(out[3], minH, maxH)
+      return out
+    }
+
+    // Throttle DOM updates using requestAnimationFrame
+    let pendingVb = null
+    let rafId = null
+    const applyVb = () => {
+      if (pendingVb) {
+        wrap.__mermaidCurViewBox = pendingVb
+        setSvgViewBox(svg, pendingVb)
+        pendingVb = null
+      }
+      rafId = null
+      wrap.__mermaidRafId = null
+    }
+    const setCurVb = vb => {
+      pendingVb = clampVb(vb)
+      if (!rafId) {
+        rafId = requestAnimationFrame(applyVb)
+        wrap.__mermaidRafId = rafId
+      }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      lastPointerX: 0,
+      lastPointerY: 0
+    }
+
+    const onPointerDown = e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      const curVb = wrap.__mermaidCurViewBox
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      if (state.pointers.size === 1) {
+        state.startVb = curVb.slice()
+        state.lastPointerX = e.clientX
+        state.lastPointerY = e.clientY
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = curVb.slice()
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      const curVb = wrap.__mermaidCurViewBox
+      const rect = getRect()
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = state.pointers.values().next().value
+        const dxClient = p.x - state.lastPointerX
+        const dyClient = p.y - state.lastPointerY
+        state.lastPointerX = p.x
+        state.lastPointerY = p.y
+        const dx = dxClient * (curVb[2] / rect.width)
+        const dy = dyClient * (curVb[3] / rect.height)
+        setCurVb([curVb[0] - dx, curVb[1] - dy, curVb[2], curVb[3]])
+        return
+      }
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const px = curVb[0] + (cx - rect.left) * (curVb[2] / rect.width)
+        const py = curVb[1] + (cy - rect.top) * (curVb[3] / rect.height)
+        setCurVb(zoomAtPoint(state.startVb, factor, px, py))
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      // Release PointerCapture to avoid event capture anomalies
+      if (svg.hasPointerCapture && svg.hasPointerCapture(e.pointerId)) {
+        svg.releasePointerCapture(e.pointerId)
+      }
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+      } else if (state.pointers.size === 1) {
+        const p = state.pointers.values().next().value
+        state.lastPointerX = p.x
+        state.lastPointerY = p.y
+      }
+    }
+
+    const onWheel = e => {
+      // Prevent event bubbling from triggering external scroll
+      e.preventDefault()
+      e.stopPropagation()
+      // Normalize deltaY across deltaMode (Chrome uses pixels, Safari uses lines)
+      let delta = e.deltaY
+      if (e.deltaMode === 1) delta *= 16
+      else if (e.deltaMode === 2) delta *= 400
+
+      // Continuous zoom factor: smoother than fixed 1.1/0.9 steps
+      const zoomFactor = Math.pow(1.001, delta)
+
+      const curVb = wrap.__mermaidCurViewBox
+      const rect = getRect()
+      const px = curVb[0] + (e.clientX - rect.left) * (curVb[2] / rect.width)
+      const py = curVb[1] + (e.clientY - rect.top) * (curVb[3] / rect.height)
+      setCurVb(zoomAtPoint(curVb, zoomFactor, px, py))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (init) setCurVb(init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown, { signal: ac.signal })
+    svg.addEventListener('pointermove', onPointerMove, { signal: ac.signal })
+    svg.addEventListener('pointerup', onPointerUpOrCancel, { signal: ac.signal })
+    svg.addEventListener('pointercancel', onPointerUpOrCancel, { signal: ac.signal })
+    svg.addEventListener('wheel', onWheel, { passive: false, signal: ac.signal })
+    svg.addEventListener('dblclick', onDblClick, { signal: ac.signal })
+  }
+
   const runMermaid = ele => {
     window.loadMermaid = true
     const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
-
     ele.forEach((item, index) => {
       const mermaidSrc = item.firstElementChild
-      const mermaidThemeConfig = `%%{init:{ 'theme':'${theme}'}}%%\n`
+      // Clean up event listeners before removing old SVG
+      if (item.__mermaidAbortController) {
+        item.__mermaidAbortController.abort()
+      }
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      let config = {}
+      try {
+        config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      } catch (e) {
+        console.warn('[mermaid] failed to parse dataset.config:', e)
+      }
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
       const mermaidID = `mermaid-${index}`
       const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
 
-      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
       const renderMermaid = svg => {
         mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
       }
 
-      // mermaid v9 and v10 compatibility
-      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+      const handleError = err => {
+        console.error(`[mermaid] render failed for block #${index}:`, err)
+        const errorEl = document.createElement('div')
+        errorEl.className = 'mermaid-error'
+        errorEl.textContent = `Mermaid render error: ${err.message || err}`
+        mermaidSrc.insertAdjacentElement('afterend', errorEl)
+      }
+
+      try {
+        const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+        // mermaid v9 and v10 compatibility
+        if (typeof renderFn === 'string') {
+          renderMermaid(renderFn)
+        } else {
+          renderFn.then(({ svg }) => renderMermaid(svg)).catch(handleError)
+        }
+      } catch (err) {
+        handleError(err)
+      }
     })
   }
 
-  const codeToMermaid = () => {
-    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+  const codeToMermaid = $article => {
+    const codeMermaidEle = $article.querySelectorAll('pre > code.mermaid')
     if (codeMermaidEle.length === 0) return
 
     codeMermaidEle.forEach(ele => {
@@ -316,13 +660,16 @@ btf.addGlobalFn('pjaxSendOnce', () => { typed.destroy() }, 'typedDestroy')
   }
 
   const loadMermaid = () => {
-    if (false) codeToMermaid()
-    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    const $article = document.getElementById('article-container')
+    if (!$article) return
+
+    if (false) codeToMermaid($article)
+    const $mermaid = $article.querySelectorAll('.mermaid-wrap')
     if ($mermaid.length === 0) return
 
     const runMermaidFn = () => runMermaid($mermaid)
     btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
-    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.0/dist/mermaid.min.js').then(runMermaidFn)
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js').then(runMermaidFn)
   }
 
   btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
@@ -331,28 +678,11 @@ btf.addGlobalFn('pjaxSendOnce', () => { typed.destroy() }, 'typedDestroy')
 POWERMODE.shake = false;
 POWERMODE.mobile = false;
 document.body.addEventListener('input', POWERMODE);
-</script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-show-text.min.js" data-mobile="false" data-text="富强,民主,文明,和谐,平等,公正,法治,爱国,敬业,诚信,友善" data-fontsize="16px" data-random="false" async="async"></script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/metingjs/dist/Meting.min.js"></script><script>(() => {
-  const destroyAplayer = () => {
-    if (window.aplayers) {
-      for (let i = 0; i < window.aplayers.length; i++) {
-        if (!window.aplayers[i].options.fixed) {
-          window.aplayers[i].destroy()
-        }
-      }
-    }
-  }
-
-  const runMetingJS = () => {
-    typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
-  }
-
-  btf.addGlobalFn('pjaxSend', destroyAplayer, 'destroyAplayer')
-  btf.addGlobalFn('pjaxComplete', loadMeting, 'runMetingJS')
-})()</script><script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js"></script><script>(() => {
+</script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-show-text.min.js" data-mobile="false" data-text="富强,民主,文明,和谐,平等,公正,法治,爱国,敬业,诚信,友善" data-fontsize="16px" data-random="false" async="async"></script><script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js" defer="defer"></script><script>document.addEventListener('DOMContentLoaded', () => {
   const pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
 
   window.pjax = new Pjax({
-    elements: 'a:not([target="_blank"])',
+    elements: 'a:not([target="_blank"]):not([data-fancybox])',
     selectors: pjaxSelectors,
     cacheBust: false,
     analytics: false,
@@ -385,8 +715,9 @@ document.body.addEventListener('input', POWERMODE);
   document.addEventListener('pjax:complete', () => {
     btf.removeGlobalFnEvent('pjaxCompleteOnce')
     document.querySelectorAll('script[data-pjax]').forEach(item => {
+      if (!item.parentNode) return
       const newScript = document.createElement('script')
-      const content = item.text || item.textContent || item.innerHTML || ""
+      const content = item.text || item.textContent || ''
       Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
       newScript.appendChild(document.createTextNode(content))
       item.parentNode.replaceChild(newScript, item)
@@ -396,11 +727,13 @@ document.body.addEventListener('input', POWERMODE);
   })
 
   document.addEventListener('pjax:error', e => {
-    if (e.request.status === 404) {
-      const usePjax = true
+    const responseURL = e.request && e.request.responseURL
+    if (e.request && e.request.status === 404) {
       true
-        ? (usePjax ? pjax.loadUrl('/404.html') : window.location.href = '/404.html')
-        : window.location.href = e.request.responseURL
+        ? pjax.loadUrl('/404.html')
+        : responseURL && (window.location.href = responseURL)
+    } else if (responseURL) {
+      window.location.href = responseURL
     }
   })
-})()</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginModelPath":"assets/","model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":200,"height":450},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginRootPath":"live2dw/","tagMode":false});</script></body></html>
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginModelPath":"assets/","model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":200,"height":450},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginRootPath":"live2dw/","tagMode":false});</script></body></html>

@@ -14,61 +14,85 @@
       }
     },
 
-    throttle: function (func, wait, options = {}) {
-      let timeout, context, args
+    throttle: (func, wait, options = {}) => {
+      let timeout, args
       let previous = 0
 
       const later = () => {
         previous = options.leading === false ? 0 : new Date().getTime()
         timeout = null
-        func.apply(context, args)
-        if (!timeout) context = args = null
+        func(...args)
+        if (!timeout) args = null
       }
 
-      const throttled = (...params) => {
+      return (...params) => {
         const now = new Date().getTime()
         if (!previous && options.leading === false) previous = now
         const remaining = wait - (now - previous)
-        context = this
         args = params
+
         if (remaining <= 0 || remaining > wait) {
           if (timeout) {
             clearTimeout(timeout)
             timeout = null
           }
           previous = now
-          func.apply(context, args)
-          if (!timeout) context = args = null
+          func(...args)
+          if (!timeout) args = null
         } else if (!timeout && options.trailing !== false) {
           timeout = setTimeout(later, remaining)
         }
       }
-
-      return throttled
     },
 
-    overflowPaddingR: {
-      add: () => {
-        const paddingRight = window.innerWidth - document.body.clientWidth
-
-        if (paddingRight > 0) {
-          document.body.style.paddingRight = `${paddingRight}px`
-          document.body.style.overflow = 'hidden'
-          const menuElement = document.querySelector('#page-header.nav-fixed #menus')
-          if (menuElement) {
-            menuElement.style.paddingRight = `${paddingRight}px`
-          }
-        }
-      },
-      remove: () => {
-        document.body.style.paddingRight = ''
-        document.body.style.overflow = ''
-        const menuElement = document.querySelector('#page-header.nav-fixed #menus')
-        if (menuElement) {
-          menuElement.style.paddingRight = ''
-        }
+    rafThrottle: fn => {
+      let rafId = null
+      return (...args) => {
+        if (rafId) return
+        rafId = requestAnimationFrame(() => {
+          fn(...args)
+          rafId = null
+        })
       }
     },
+
+    overflowPaddingR: (() => {
+      let headerElement = null
+      let menuElement = null
+
+      const getElements = () => {
+        if (!headerElement) {
+          headerElement = document.getElementById('page-header')
+        }
+        if (!menuElement) {
+          menuElement = document.getElementById('menus')
+        }
+        return { headerElement, menuElement }
+      }
+
+      return {
+        add: () => {
+          const paddingRight = window.innerWidth - document.body.clientWidth
+
+          if (paddingRight > 0) {
+            document.body.style.paddingRight = `${paddingRight}px`
+            document.body.style.overflow = 'hidden'
+            const { headerElement: header, menuElement: menu } = getElements()
+            if (header && menu && header.classList.contains('nav-fixed')) {
+              menu.style.paddingRight = `${paddingRight}px`
+            }
+          }
+        },
+        remove: () => {
+          document.body.style.paddingRight = ''
+          document.body.style.overflow = ''
+          const { headerElement: header, menuElement: menu } = getElements()
+          if (header && menu && header.classList.contains('nav-fixed')) {
+            menu.style.paddingRight = ''
+          }
+        }
+      }
+    })(),
 
     snackbarShow: (text, showAction = false, duration = 2000) => {
       const { position, bgLight, bgDark } = GLOBAL_CONFIG.Snackbar
@@ -135,7 +159,8 @@
       const animate = currentTime => {
         const timeElapsed = currentTime - startTime
         const progress = Math.min(timeElapsed / time, 1)
-        window.scrollTo(0, currentPos + (pos - currentPos) * progress)
+        const easedProgress = 1 - Math.pow(1 - progress, 4) // easeOutQuart
+        window.scrollTo(0, currentPos + (pos - currentPos) * easedProgress)
         if (progress < 1) {
           requestAnimationFrame(animate)
         }
@@ -169,17 +194,7 @@
 
     isHidden: ele => ele.offsetHeight === 0 && ele.offsetWidth === 0,
 
-    getEleTop: ele => {
-      let actualTop = ele.offsetTop
-      let current = ele.offsetParent
-
-      while (current !== null) {
-        actualTop += current.offsetTop
-        current = current.offsetParent
-      }
-
-      return actualTop
-    },
+    getEleTop: ele => ele.getBoundingClientRect().top + window.scrollY,
 
     loadLightbox: ele => {
       const service = GLOBAL_CONFIG.lightbox
@@ -190,7 +205,7 @@
       }
 
       if (service === 'fancybox') {
-        Array.from(ele).forEach(i => {
+        ele.forEach(i => {
           if (i.parentNode.tagName !== 'A') {
             const dataSrc = i.dataset.lazySrc || i.src
             const dataCaption = i.title || i.alt || ''
@@ -228,7 +243,8 @@
                   ],
                   right: ['slideshow', 'thumbs', 'close']
                 }
-              }
+              },
+              hideScrollbar: false
             }
           } else {
             options = {
@@ -259,7 +275,8 @@
                     maxScale: 4
                   }
                 }
-              }
+              },
+              hideScrollbar: false
             }
           }
 
