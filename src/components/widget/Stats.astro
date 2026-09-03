@@ -56,6 +56,14 @@ const lastUpdate = newest
     ? `${newest.getFullYear()}-${pad(newest.getMonth() + 1)}-${pad(newest.getDate())}`
     : "--";
 
+/**
+ * 老站（旧版 Butterfly 的 hexo 数据）累计：访客 7235 / 浏览量 9744。
+ * 新版不蒜子接口现在按 oct0pu5.cn 从 0 开始计，这里把老数据当基数叠加，
+ * 显示 = 基数 + 不蒜子新增量，视觉上"接着老数据涨"。改动下面两个值即可调整基数。
+ */
+const PV_BASE = 9744;
+const UV_BASE = 7235;
+
 interface Props {
     class?: string;
     style?: string;
@@ -121,16 +129,42 @@ function serverUptime(): string {
         </div>
         <div class="flex items-center justify-between text-sm">
             <span class="text-50">总访问量</span>
-            <span id="busuanzi_value_site_pv" class="font-bold text-75">…</span>
+            <span id="busuanzi_value_site_pv" class="font-bold text-75">{PV_BASE}</span>
         </div>
         <div class="flex items-center justify-between text-sm">
             <span class="text-50">访客数</span>
-            <span id="busuanzi_value_site_uv" class="font-bold text-75">…</span>
+            <span id="busuanzi_value_site_uv" class="font-bold text-75">{UV_BASE}</span>
         </div>
     </div>
 </WidgetLayout>
 
-<script async is:inline src="//cdn.busuanzi.cc/busuanzi/3.6.9/busuanzi.min.js"></script>
+<script is:inline define:vars={{ pvBase: PV_BASE, uvBase: UV_BASE }}>
+    // 访问统计：显示 = 老基数 + 不蒜子新增量。
+    // 先写基数保证永不显示"未知"；接口抽风/失败时也始终有数字，只是不涨。
+    (async function () {
+        const base = { busuanzi_value_site_pv: pvBase, busuanzi_value_site_uv: uvBase };
+        for (const [id, b] of Object.entries(base)) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = String(b);
+        }
+        try {
+            const res = await fetch("https://cdn.busuanzi.cc/api.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url: location.href, referrer: document.referrer }),
+            });
+            const data = await res.json();
+            for (const key in data) {
+                const el = document.getElementById(key);
+                if (el && base[key] !== undefined) {
+                    el.textContent = String((base[key] ?? 0) + (Number(data[key]) || 0));
+                }
+            }
+        } catch (err) {
+            console.error("busuanzi 接口不可用，仅显示老基数:", err);
+        }
+    })();
+</script>
 
 <script is:inline>
     // 站点运行时间（起点与服务端 START_TEXT 保持一致；只显示到"年 天"，每分钟刷新一次即可）
