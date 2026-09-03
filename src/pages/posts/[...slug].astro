@@ -11,7 +11,7 @@ import { Icon } from "astro-icon/components";
 import { licenseConfig } from "src/config";
 import ImageWrapper from "../../components/misc/ImageWrapper.astro";
 import PostMetadata from "../../components/PostMeta.astro";
-import { profileConfig, siteConfig } from "../../config";
+import { giscusConfig, profileConfig, siteConfig } from "../../config";
 import { formatDateToYYYYMMDD } from "../../utils/date-utils";
 
 export async function getStaticPaths() {
@@ -131,5 +131,16 @@ const jsonLd = {
             </div>}
         </a>
     </div>
+
+    <!-- 评论区:giscus 由 Layout 的全局脚本按 URL 关联挂载,这里只放容器 -->
+    {giscusConfig.enable && (
+        <div class="card-base w-full rounded-[var(--radius-large)] px-6 md:px-9 py-6 mb-4 onload-animation">
+            <div class="flex items-center gap-2.5 mb-5">
+                <div class="w-1 h-5 rounded-md bg-[var(--primary)]"></div>
+                <h2 class="font-bold text-xl text-black/90 dark:text-white/90">评论</h2>
+            </div>
+            <div id="giscus"></div>
+        </div>
+    )}
 
 </MainGridLayout>

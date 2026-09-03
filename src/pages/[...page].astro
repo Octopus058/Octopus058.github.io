@@ -4,10 +4,10 @@ import Pagination from "../components/control/Pagination.astro";
 import PostPage from "../components/PostPage.astro";
 import { PAGE_SIZE } from "../constants/constants";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
-import { getSortedPosts } from "../utils/content-utils";
+import { getHomeFeedPosts } from "../utils/content-utils";
 
 export const getStaticPaths = (async ({ paginate }) => {
-	const allBlogPosts = await getSortedPosts();
+	const allBlogPosts = await getHomeFeedPosts();
 	return paginate(allBlogPosts, { pageSize: PAGE_SIZE });
 }) satisfies GetStaticPaths;
 // https://github.com/withastro/astro/issues/6507#issuecomment-1489916992

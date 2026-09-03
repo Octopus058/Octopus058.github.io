@@ -1,0 +1,96 @@
+---
+import WidgetLayout from "./WidgetLayout.astro";
+import { getPostUrlBySlug, url } from "../../utils/url-utils";
+import { buildQuotePool } from "../../utils/poem-quotes";
+
+/**
+ * 侧栏“拾句”卡：从自己的诗库里随机抽一句展示，点“换一句”再随机。
+ * 首句构建时由 SSR 选好（不闪白）；换句时拉取 /random-quotes.json 的诗句池。
+ */
+interface Props {
+	class?: string;
+	style?: string;
+}
+
+const className = Astro.props.class;
+const style = Astro.props.style;
+
+const pool = await buildQuotePool();
+const quotesFile = url("/random-quotes.json");
+
+let initText = "";
+let initTitle = "";
+let initPub = "";
+let initHref = "";
+if (pool.length > 0) {
+	const q = pool[Math.floor(Math.random() * pool.length)];
+	initText = q.text;
+	initTitle = q.title;
+	initPub = q.published;
+	initHref = getPostUrlBySlug(q.slug);
+}
+const hasQuotes = pool.length > 0;
+---
+
+<WidgetLayout name="拾句" id="random-quote" class={className} style={style}>
+    {hasQuotes && (
+        <div class="flex flex-col gap-2 px-1 pt-0.5 pb-2">
+            <div class="text-lg leading-8 text-90 break-words">
+                <span class="text-[var(--primary)] font-serif mr-1 text-2xl leading-none align-[-4px]">“</span>
+                <span id="rq-text">{initText}</span>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+                <a id="rq-src" href={initHref} class="min-w-0 truncate text-xs text-50 transition link hover:text-[var(--primary)]">
+                    <span id="rq-title">{initPub ? initPub + " · " : ""}{initTitle}</span>
+                </a>
+                <button id="rq-shuffle" type="button"
+                        class="btn-regular shrink-0 rounded-lg px-2.5 h-8 text-xs text-[var(--primary)]">
+                    换一句
+                </button>
+            </div>
+        </div>
+    )}
+    {!hasQuotes && <div class="px-1 pb-2 text-sm text-50">诗库里暂无可拾之句</div>}
+</WidgetLayout>
+
+<script is:inline define:vars={{ quotesFile, initText }}>
+    (function () {
+        const textEl = document.getElementById("rq-text");
+        const titleEl = document.getElementById("rq-title");
+        const srcEl = document.getElementById("rq-src");
+        const btn = document.getElementById("rq-shuffle");
+        if (!textEl || !titleEl || !srcEl || !btn) return;
+
+        let pool = [];
+        let loaded = false;
+
+        async function loadPool() {
+            if (loaded) return pool;
+            loaded = true;
+            try {
+                const res = await fetch(quotesFile, { cache: "force-cache" });
+                if (res.ok) pool = await res.json();
+            } catch (err) {
+                console.error("拾句池加载失败:", err);
+            }
+            return pool;
+        }
+
+        function show(q) {
+            textEl.textContent = q.text;
+            titleEl.textContent = q.published ? q.published + " · " + q.title : q.title;
+            srcEl.href = "/posts/" + q.slug + "/";
+        }
+
+        btn.addEventListener("click", async () => {
+            const cur = textEl.textContent;
+            const list = await loadPool();
+            if (!list.length) return;
+            let q = list[Math.floor(Math.random() * list.length)];
+            for (let tries = 0; tries < 20 && q.text === cur; tries++) {
+                q = list[Math.floor(Math.random() * list.length)];
+            }
+            show(q);
+        });
+    })();
+</script>

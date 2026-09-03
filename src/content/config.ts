@@ -6,6 +6,7 @@ const postsCollection = defineCollection({
 		published: z.date(),
 		updated: z.date().optional(),
 		draft: z.boolean().optional().default(false),
+		pinned: z.boolean().optional().default(false), // 置顶到首页 feed 顶部
 		description: z.string().optional().default(""),
 		image: z.string().optional().default(""),
 		category: z.string().optional().nullable().default(""),

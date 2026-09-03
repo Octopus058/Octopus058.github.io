@@ -192,6 +192,31 @@ const bannerOffset =
 		@apply opacity-0 -translate-y-16
 	}
 }
+
+/* 手机端(<1024px)的 banner 处理：
+   桌面那套"整屏 65vh + 下移平移取景"在窄屏上会把横图裁成中间一条竖带，
+   主体(图右上 x≈1350-2050 / y0-600)会跑到画面外。
+   这里改成"顶部一条取景横条"：裁掉左侧空荡区域、把主体对准画面。
+   改观感只需调两个数：下面的 80vw(高=屏宽的 80%)和 85%(横向取景对准点)。
+   桌面端(≥1024px)不受影响。 */
+@media (max-width: 1023px) {
+	.enable-banner #banner-wrapper {
+		top: 0 !important; /* 覆盖 MainGridLayout 行内 top:-30vh，banner 从页顶开始 */
+		height: 80vw !important;
+	}
+	.enable-banner #banner {
+		transform: none !important; /* 取消 translate-y bannerOffset(15vh) 下移，避免把主体裁掉 */
+	}
+	.enable-banner #banner img {
+		object-position: 68% center !important; /* 横向对准主体(x1700 居中)。想让画面往右移 → 数字调小；往左移 → 调大 */
+	}
+	.enable-banner #top-row {
+		height: auto !important; /* 导航不再预留 65vh 空位 */
+	}
+	.enable-banner #main-panel {
+		top: calc(80vw + 1rem) !important; /* 内容紧贴 banner 下方 */
+	}
+}
 </style>
 
 <script>
@@ -210,7 +235,7 @@ import {
 	BANNER_HEIGHT_EXTEND,
 	MAIN_PANEL_OVERLAPS_BANNER_HEIGHT
 } from "../constants/constants";
-import { siteConfig } from '../config';
+import { giscusConfig, siteConfig } from '../config';
 
 /* Preload fonts */
 // (async function() {
@@ -373,6 +398,8 @@ function init() {
 
 /* Load settings when entering the site */
 init();
+// 直接打开文章页时挂载 giscus(非文章页没有 #giscus 容器,自动跳过)
+mountGiscus();
 
 const setup = () => {
 	// TODO: temp solution to change the height of the banner
@@ -432,6 +459,8 @@ const setup = () => {
 		if (heightExtend) {
 			heightExtend.classList.remove('hidden')
 		}
+		// Swup 换页完成、新文章页 DOM 已就位,重挂评论区
+		mountGiscus();
 	});
 	window.swup.hooks.on('visit:end', (_visit: {to: {url: string}}) => {
 		setTimeout(() => {
@@ -501,6 +530,54 @@ window.onresize = () => {
 	offset = offset - offset % 4;
 	document.documentElement.style.setProperty('--banner-height-extend', `${offset}px`);
 }
+
+/* ---- 评论区(giscus)----
+   文章页的 [...slug].astro 渲染一个 #giscus 容器;这里负责在首屏和每次 Swup
+   换页(page:view)后把 giscus client 脚本挂进去。配置在 src/config.ts 的
+   giscusConfig(先到 https://giscus.app 授权拿 repoId/categoryId,enable 置 true)。
+   mapping=pathname,评论按文章 URL 关联,换页时无需传参。 */
+function giscusTheme() {
+	return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+}
+function mountGiscus() {
+	const host = document.getElementById('giscus');
+	if (!host) return; // 非文章页没有容器,跳过
+	if (!giscusConfig.enable || !giscusConfig.repo || !giscusConfig.repoId || !giscusConfig.categoryId) {
+		host.innerHTML = '';
+		return;
+	}
+	host.innerHTML = ''; // 清掉上一次换页留下的 iframe,避免重复
+	const script = document.createElement('script');
+	script.src = 'https://giscus.app/client.js';
+	script.setAttribute('data-repo', giscusConfig.repo);
+	script.setAttribute('data-repo-id', giscusConfig.repoId);
+	script.setAttribute('data-category', giscusConfig.category);
+	script.setAttribute('data-category-id', giscusConfig.categoryId);
+	script.setAttribute('data-mapping', giscusConfig.mapping);
+	script.setAttribute('data-strict', '0');
+	script.setAttribute('data-reactions-enabled', giscusConfig.reactionsEnabled ? '1' : '0');
+	script.setAttribute('data-emit-metadata', '0');
+	script.setAttribute('data-input-position', 'top');
+	script.setAttribute('data-theme', giscusTheme());
+	script.setAttribute('data-lang', giscusConfig.lang);
+	script.setAttribute('data-loading', 'lazy');
+	script.async = true;
+	host.appendChild(script);
+}
+function syncGiscusTheme() {
+	const frame = document.querySelector('iframe.giscus-frame');
+	if (frame?.contentWindow) {
+		frame.contentWindow.postMessage(
+			{ giscus: { setConfig: { theme: giscusTheme() } } },
+			'https://giscus.app',
+		);
+	}
+}
+// 用户切换亮/暗主题时,把新主题同步进 giscus iframe
+new MutationObserver(syncGiscusTheme).observe(document.documentElement, {
+	attributes: true,
+	attributeFilter: ['class'],
+});
 
 </script>
 
