@@ -1,0 +1,61 @@
+---
+import { Icon } from "astro-icon/components";
+import I18nKey from "../i18n/i18nKey";
+import { i18n } from "../i18n/translation";
+import { formatDateToYYYYMMDD } from "../utils/date-utils";
+import { getCategoryUrl } from "../utils/url-utils";
+
+interface Props {
+	class: string;
+	published: Date;
+	updated?: Date;
+	category: string | null;
+	hideUpdateDate?: boolean;
+}
+const {
+	published,
+	updated,
+	category,
+	hideUpdateDate = false,
+} = Astro.props;
+const className = Astro.props.class;
+---
+
+<div class:list={["flex flex-wrap text-neutral-500 dark:text-neutral-400 items-center gap-4 gap-x-4 gap-y-2", className]}>
+    <!-- publish date -->
+    <div class="flex items-center">
+        <div class="meta-icon"
+        >
+            <Icon name="material-symbols:calendar-today-outline-rounded" class="text-xl"></Icon>
+        </div>
+        <span class="text-50 text-sm font-medium">{formatDateToYYYYMMDD(published)}</span>
+    </div>
+
+    <!-- update date -->
+    {!hideUpdateDate && updated && updated.getTime() !== published.getTime() && (
+        <div class="flex items-center">
+            <div class="meta-icon"
+            >
+                <Icon name="material-symbols:edit-calendar-outline-rounded" class="text-xl"></Icon>
+            </div>
+            <span class="text-50 text-sm font-medium">{formatDateToYYYYMMDD(updated)}</span>
+        </div>
+    )}
+
+    <!-- categories -->
+    <div class="flex items-center">
+        <div class="meta-icon"
+        >
+            <Icon name="material-symbols:book-2-outline-rounded" class="text-xl"></Icon>
+        </div>
+        <div class="flex flex-row flex-nowrap items-center">
+            <a href={getCategoryUrl(category)} aria-label={`View all posts in the ${category} category`}
+               class="link-lg transition text-50 text-sm font-medium
+                            hover:text-[var(--primary)] dark:hover:text-[var(--primary)] whitespace-nowrap">
+                {category || i18n(I18nKey.uncategorized)}
+            </a>
+        </div>
+    </div>
+
+    <!-- no tags -->
+</div>

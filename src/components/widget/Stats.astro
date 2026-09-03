@@ -1,0 +1,152 @@
+---
+import { getCollection } from "astro:content";
+import { Icon } from "astro-icon/components";
+import { getCategoryList } from "../../utils/content-utils";
+import WidgetLayout from "./WidgetLayout.astro";
+
+/**
+ * 侧边栏站点数据统计卡片：
+ * 1. 站点已运行时间（实时跳动）
+ * 2. 博客总览（文章 / 分类 / 最近更新）
+ * 3. 访问统计（不蒜子 PV / UV）
+ *
+ * 运行计时起点沿用旧 Butterfly 配置 runtimeshow 的 publish_date。
+ */
+const START_TEXT = "2024/02/24 00:00:00"; // 改动此值即可调整计时起点
+
+/**
+ * 统计正文字数（近似 hexo-wordcount 口径）：
+ * 每 1 个 CJK 字符计 1，其余按连续字母/数字的单词计 1。
+ */
+function countWords(raw: string): number {
+    let s = raw.replace(/<[^>]+>/g, "");
+    const reps: Record<string, string> = {
+        "&ensp;": " ", "&nbsp;": " ", "&amp;": "&",
+        "&#39;": "'", "&apos;": "'", "&quot;": '"',
+        "&lt;": "<", "&gt;": ">",
+    };
+    for (const [a, b] of Object.entries(reps)) s = s.replaceAll(a, b);
+    s = s.replace(/&#\d+;/g, " ");
+    const cjk = s.match(/[㐀-䶿一-鿿぀-ヿ가-힯]/g);
+    const noCjk = s.replace(/[㐀-䶿一-鿿぀-ヿ가-힯]/g, " ");
+    const latin = noCjk.split(/[^0-9A-Za-zÀ-ɏ]+/).filter(Boolean).length;
+    return (cjk ? cjk.length : 0) + latin;
+}
+
+const allPosts = await getCollection("posts", ({ data }) => {
+    return import.meta.env.PROD ? data.draft !== true : true;
+});
+const postCount = allPosts.length;
+const categoryCount = (await getCategoryList()).length;
+
+let totalWords = 0;
+let newest: Date | undefined;
+for (const p of allPosts) {
+    totalWords += countWords(p.body ?? "");
+    if (!newest || p.data.published > newest) newest = p.data.published;
+}
+const totalWordsText = totalWords >= 1000
+    ? `${(totalWords / 1000).toFixed(1)}k`
+    : String(totalWords);
+
+function pad(n: number) {
+    return String(n).padStart(2, "0");
+}
+const lastUpdate = newest
+    ? `${newest.getFullYear()}-${pad(newest.getMonth() + 1)}-${pad(newest.getDate())}`
+    : "--";
+
+interface Props {
+    class?: string;
+    style?: string;
+}
+const className = Astro.props.class;
+const style = Astro.props.style;
+
+// 供服务端首屏渲染的初始文本（客户端脚本会接管并定时刷新）
+function serverUptime(): string {
+    const startMs = new Date(START_TEXT).getTime();
+    let diff = Math.max(0, Date.now() - startMs);
+    const yearMs = 365.2425 * 24 * 3600 * 1000;
+    const years = Math.floor(diff / yearMs);
+    diff -= years * yearMs;
+    const days = Math.floor(diff / 86400000);
+    return `${years} 年 ${days} 天`;
+}
+---
+
+<WidgetLayout name="统计" id="stats" class={className} style={style}>
+    <!-- 1. 站点已运行时间 -->
+    <div class="px-1 pt-1 pb-3">
+        <div class="rounded-lg bg-black/5 dark:bg-white/10 px-3 py-2.5 text-center mb-1">
+            <div class="flex items-center justify-center gap-1.5 text-50 text-xs mb-1">
+                <Icon name="material-symbols:schedule-outline-rounded" class="text-sm"></Icon>
+                <span>站点已运行</span>
+            </div>
+            <div id="stats-uptime" class="font-bold text-[var(--primary)] text-sm leading-snug">{serverUptime()}</div>
+        </div>
+    </div>
+
+    <!-- 2. 博客总览 -->
+    <div class="px-4 pb-3 flex flex-col gap-1.5">
+        <div class="flex items-center gap-1.5 text-50 text-xs mb-0.5">
+            <Icon name="material-symbols:query-stats-rounded" class="text-sm"></Icon>
+            <span>博客总览</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+            <span class="text-50">文章</span>
+            <span class="font-bold text-75">{postCount}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+            <span class="text-50">总字数</span>
+            <span class="font-bold text-75" title={totalWordsText}>{totalWordsText}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+            <span class="text-50">分类</span>
+            <span class="font-bold text-75">{categoryCount}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+            <span class="text-50">最近更新</span>
+            <span class="font-bold text-75">{lastUpdate}</span>
+        </div>
+    </div>
+
+    <div class="mx-4 border-dashed border-b-[1px] border-black/10 dark:border-white/[0.15]"></div>
+
+    <!-- 3. 访问统计 -->
+    <div class="px-4 pt-3 pb-4 flex flex-col gap-1.5">
+        <div class="flex items-center gap-1.5 text-50 text-xs mb-0.5">
+            <Icon name="material-symbols:visibility-outline-rounded" class="text-sm"></Icon>
+            <span>访问统计</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+            <span class="text-50">总访问量</span>
+            <span id="busuanzi_value_site_pv" class="font-bold text-75">…</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+            <span class="text-50">访客数</span>
+            <span id="busuanzi_value_site_uv" class="font-bold text-75">…</span>
+        </div>
+    </div>
+</WidgetLayout>
+
+<script async is:inline src="//cdn.busuanzi.cc/busuanzi/3.6.9/busuanzi.min.js"></script>
+
+<script is:inline>
+    // 站点运行时间（起点与服务端 START_TEXT 保持一致；只显示到"年 天"，每分钟刷新一次即可）
+    (function () {
+        const startMs = new Date("2024/02/24 00:00:00").getTime();
+        const el = document.getElementById("stats-uptime");
+        if (!el) return;
+        const yearMs = 365.2425 * 24 * 3600 * 1000;
+        function tick() {
+            let diff = Math.max(0, Date.now() - startMs);
+            const years = Math.floor(diff / yearMs);
+            diff -= years * yearMs;
+            const days = Math.floor(diff / 86400000);
+            el.textContent = years + " 年 " + days + " 天";
+        }
+        tick();
+        setInterval(tick, 60000);
+    })();
+</script>

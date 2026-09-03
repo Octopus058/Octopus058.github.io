@@ -1,0 +1,127 @@
+---
+import { getCollection } from "astro:content";
+import WidgetLayout from "./WidgetLayout.astro";
+
+/**
+ * 码字热力图：统计每个月写了多少字。
+ * 口径：把每篇文章 frontmatter 的 published 月份作为其"写作月份"，
+ * 累加该月发布文章的正文实际字数（与统计卡同一套字数算法）。
+ * 每个色块代表一年中的一个月，颜色越深当月字数越多。
+ */
+
+// 与 Stats.astro 中 countWords 保持一致的正文计数口径
+function countWords(raw: string): number {
+    let s = raw.replace(/<[^>]+>/g, "");
+    const reps: Record<string, string> = {
+        "&ensp;": " ", "&nbsp;": " ", "&amp;": "&",
+        "&#39;": "'", "&apos;": "'", "&quot;": '"',
+        "&lt;": "<", "&gt;": ">",
+    };
+    for (const [a, b] of Object.entries(reps)) s = s.replaceAll(a, b);
+    s = s.replace(/&#\d+;/g, " ");
+    const cjk = s.match(/[㐀-䶿一-鿿぀-ヿ가-힯]/g);
+    const noCjk = s.replace(/[㐀-䶿一-鿿぀-ヿ가-힯]/g, " ");
+    const latin = noCjk.split(/[^0-9A-Za-zÀ-ɏ]+/).filter(Boolean).length;
+    return (cjk ? cjk.length : 0) + latin;
+}
+
+function pad(n: number) {
+    return String(n).padStart(2, "0");
+}
+
+const allPosts = await getCollection("posts", ({ data }) => {
+    return import.meta.env.PROD ? data.draft !== true : true;
+});
+
+// 按 YYYY-MM 聚合字数
+const monthWords = new Map<string, number>();
+for (const p of allPosts) {
+    const d = p.data.published;
+    const key = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+    monthWords.set(key, (monthWords.get(key) ?? 0) + countWords(p.body ?? ""));
+}
+
+const keys = [...monthWords.keys()].sort();
+const startYear = keys.length ? Number(keys[0].slice(0, 4)) : new Date().getFullYear();
+const endYear = keys.length ? Number(keys[keys.length - 1].slice(0, 4)) : startYear;
+
+// 四分位分桶：保证小月也有可见色阶
+const nonzero = [...monthWords.values()].filter((v) => v > 0).sort((a, b) => a - b);
+function quartile(q: number): number {
+    const n = nonzero.length;
+    return nonzero[Math.min(n - 1, Math.floor(q * n))];
+}
+const [t1, t2, t3] = nonzero.length ? [quartile(0.25), quartile(0.5), quartile(0.75)] : [0, 0, 0];
+function level(v: number): number {
+    if (v <= 0) return 0;
+    if (v >= t3) return 4;
+    if (v >= t2) return 3;
+    if (v >= t1) return 2;
+    return 1;
+}
+const LEVEL_ALPHA = ["", "22%", "40%", "62%", "85%"];
+
+let totalWords = 0;
+for (const v of monthWords.values()) totalWords += v;
+const totalText = totalWords >= 1000 ? `${(totalWords / 1000).toFixed(1)}k` : String(totalWords);
+
+const years: number[] = [];
+for (let y = startYear; y <= endYear; y++) years.push(y);
+
+interface Props {
+    class?: string;
+    style?: string;
+}
+const className = Astro.props.class;
+const style = Astro.props.style;
+const cellClass = "aspect-square rounded-[0.2rem] min-w-0";
+const gridStyle = "grid-template-columns: 1.5rem repeat(12, minmax(0, 1fr)); gap: 3px;";
+const MONTHS = Array.from({ length: 12 }, (_, i) => i);
+---
+
+<WidgetLayout name="码字热力图" id="writing-heatmap" class={className} style={style}>
+    <div class="px-1 pb-1 flex flex-col gap-1.5">
+        <!-- 月份表头 -->
+        <div class="grid items-center" style={gridStyle}>
+            <span></span>
+            {MONTHS.map((m) => (
+                <span class="text-center text-[0.55rem] leading-none text-50">{m + 1}</span>
+            ))}
+        </div>
+
+        <!-- 每年一行，12 个月为列 -->
+        {years.map((y) => (
+            <div class="grid items-center" style={gridStyle}>
+                <span class="text-[0.6rem] text-50 pr-1 text-right">{y}</span>
+                {MONTHS.map((m) => {
+                    const words = monthWords.get(`${y}-${pad(m + 1)}`) ?? 0;
+                    const lv = level(words);
+                    const bg = lv === 0
+                        ? "background: color-mix(in oklch, var(--primary) 8%, transparent);"
+                        : `background: color-mix(in oklch, var(--primary) ${LEVEL_ALPHA[lv]}, transparent);`;
+                    return (
+                        <div
+                            class={cellClass}
+                            title={words > 0 ? `${y} 年 ${m + 1} 月 · ${words} 字` : ""}
+                            style={bg}
+                        ></div>
+                    );
+                })}
+            </div>
+        ))}
+
+        <!-- 图例与汇总 -->
+        <div class="flex items-center justify-between pt-0.5">
+            <span class="flex items-center gap-1 text-[0.6rem] text-50">
+                <span class="flex items-center gap-[2px]">
+                    {[1, 2, 3, 4].map((l) => (
+                        <span class={cellClass + " !w-2.5 !h-2.5"}
+                              style={`background: color-mix(in oklch, var(--primary) ${LEVEL_ALPHA[l]}, transparent);`}></span>
+                    ))}
+                </span>
+                少→多
+            </span>
+            <span class="text-[0.6rem] text-50">{years[0]}–{years[years.length - 1]} · 共 {totalText} 字</span>
+        </div>
+    </div>
+</WidgetLayout>

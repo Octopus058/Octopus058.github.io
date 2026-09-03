@@ -1,0 +1,12 @@
+---
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { url } from "@utils/url-utils";
+---
+<MainGridLayout title="404" description="Page not found">
+    <div class="card-base flex flex-col items-center px-6 md:px-9 py-16 relative w-full rounded-[var(--radius-large)] overflow-hidden text-center">
+        <div class="font-bold text-6xl text-[var(--primary)] mb-4">404</div>
+        <div class="font-bold text-xl text-black/80 dark:text-white/80 mb-2">页面不存在</div>
+        <div class="text-sm text-black/50 dark:text-white/50 mb-8">你访问的页面可能已搬家或删除。</div>
+        <a href={url("/")} class="btn-regular rounded-lg px-5 py-2.5 font-bold">返回首页</a>
+    </div>
+</MainGridLayout>
