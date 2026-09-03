@@ -35,6 +35,16 @@ export type PostForList = {
 	slug: string;
 	data: CollectionEntry<"posts">["data"];
 };
+/**
+ * 首页 feed 用：先按日期倒序（并顺带算好 prev/next），再把置顶(pinned:true)排到最前。
+ * prev/next 数据在 getSortedPosts 里按时间序写入，这里只重排引用，不影响文章内上下篇跳转。
+ */
+export async function getHomeFeedPosts() {
+	const posts = await getSortedPosts();
+	// 稳定排序：pinned 在前，各自内部仍保持日期倒序
+	return posts.sort((a, b) => Number(b.data.pinned ?? false) - Number(a.data.pinned ?? false));
+}
+
 export async function getSortedPostsList(): Promise<PostForList[]> {
 	const sortedFullPosts = await getRawSortedPosts();
 

@@ -94,3 +94,21 @@ export const expressiveCodeConfig: ExpressiveCodeConfig = {
 	// Please select a dark theme, as this blog theme currently only supports dark background color
 	theme: "github-dark",
 };
+
+/** 评论区(giscus)配置。启用步骤：
+ * 1. 在 GitHub 上把仓库 Octopus058.github.io 的 Discussions 打开(仓库 Settings → General → Discussions)
+ * 2. 打开 https://giscus.app ，选中本仓库并授权 giscus App，
+ *    从下方生成的代码里抄出 repo / repoId / category / categoryId 四个值
+ * 3. 把下面 enable 改为 true 并填入四个值，重新构建
+ * 完成后置为 true 才会在文章页底部渲染评论区(按文章 URL 关联 Discussion)。
+ */
+export const giscusConfig = {
+	enable: true, // 置为 true 才在文章页底部渲染评论区
+	repo: "Octopus058/Octopus058.github.io",
+	repoId: "R_kgDOLXW4OA",
+	category: "Announcements", // Discussions 分类名
+	categoryId: "DIC_kwDOLXW4OM4DEy8P",
+	lang: "zh-CN",
+	mapping: "pathname", // 评论按文章 URL 关联，稳定不易乱
+	reactionsEnabled: true,
+};
