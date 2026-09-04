@@ -57,12 +57,14 @@ const lastUpdate = newest
     : "--";
 
 /**
- * 老站（旧版 Butterfly 的 hexo 数据）累计：访客 7235 / 浏览量 9744。
- * 新版不蒜子接口现在按 oct0pu5.cn 从 0 开始计，这里把老数据当基数叠加，
- * 显示 = 基数 + 不蒜子新增量，视觉上"接着老数据涨"。改动下面两个值即可调整基数。
+ * SSR 首屏占位值：不蒜子经典接口按域名(oct0pu5.cn)实时累计，这个计数器本身就包含老站
+ * Butterfly 时期的数据——2026-09 实测 site_pv≈9751 / site_uv≈7240，正是"旧数据 9744/7235
+ * + 迁移后的少量新增"，所以直接显示不蒜子返回值即可、无需再叠加任何基数(叠加会重复计数)。
+ * 线上数值由官方 busuanzi 脚本实时覆盖；下面两个值仅作"脚本未返回/接口抽风"时防空白用，
+ * 顺手改成最近一次读数即可。
  */
-const PV_BASE = 9744;
-const UV_BASE = 7235;
+const PV_SEED = 9751; // 2026-09-04 oct0pu5.cn site_pv 读数(仅占位)
+const UV_SEED = 7240; // 2026-09-04 oct0pu5.cn site_uv 读数(仅占位)
 
 interface Props {
     class?: string;
@@ -129,40 +131,26 @@ function serverUptime(): string {
         </div>
         <div class="flex items-center justify-between text-sm">
             <span class="text-50">总访问量</span>
-            <span id="busuanzi_value_site_pv" class="font-bold text-75">{PV_BASE}</span>
+            <span id="busuanzi_value_site_pv" class="font-bold text-75">{PV_SEED}</span>
         </div>
         <div class="flex items-center justify-between text-sm">
             <span class="text-50">访客数</span>
-            <span id="busuanzi_value_site_uv" class="font-bold text-75">{UV_BASE}</span>
+            <span id="busuanzi_value_site_uv" class="font-bold text-75">{UV_SEED}</span>
         </div>
     </div>
 </WidgetLayout>
 
-<script is:inline define:vars={{ pvBase: PV_BASE, uvBase: UV_BASE }}>
-    // 访问统计：显示 = 老基数 + 不蒜子新增量。
-    // 先写基数保证永不显示"未知"；接口抽风/失败时也始终有数字，只是不涨。
-    (async function () {
-        const base = { busuanzi_value_site_pv: pvBase, busuanzi_value_site_uv: uvBase };
-        for (const [id, b] of Object.entries(base)) {
-            const el = document.getElementById(id);
-            if (el) el.textContent = String(b);
-        }
-        try {
-            const res = await fetch("https://cdn.busuanzi.cc/api.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url: location.href, referrer: document.referrer }),
-            });
-            const data = await res.json();
-            for (const key in data) {
-                const el = document.getElementById(key);
-                if (el && base[key] !== undefined) {
-                    el.textContent = String((base[key] ?? 0) + (Number(data[key]) || 0));
-                }
-            }
-        } catch (err) {
-            console.error("busuanzi 接口不可用，仅显示老基数:", err);
-        }
+<script is:inline>
+    // 访问统计: 加载官方 busuanzi 脚本。它按当前页面域名(oct0pu5.cn)实时计数,并把
+    // site_pv / site_uv 写进 id 为 busuanzi_value_* 的元素(与上面两个 span 的 id 一致)。
+    // 注意必须用普通(非 module)脚本方式注入——官方脚本是经典脚本,若被当成 module 加载,
+    // 顶层的 var 声明不会挂到 window,计数会失效。
+    // 若接口一直未返回,元素保持 SSR 占位值:不空白,也不显示"未知"。
+    (function () {
+        var s = document.createElement("script");
+        s.src = "https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js";
+        s.async = true;
+        document.head.appendChild(s);
     })();
 </script>
 

@@ -1,0 +1,57 @@
+---
+import QRCode from "qrcode";
+import { Icon } from "astro-icon/components";
+
+interface Props {
+	title: string;
+	url: string;
+	description?: string;
+}
+
+const { title, url } = Astro.props;
+
+// 二维码在构建期按当前页 url 生成静态 SVG,不引入运行时 JS 库;url 是 site(canonical)拼的。
+// 微信:扫码在微信里打开文章 → 点右上角「···」转发给好友。
+const pageQr = await QRCode.toString(url, {
+	type: "svg",
+	margin: 2,
+	color: { dark: "#000000", light: "#ffffff" },
+});
+
+const chip = "inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full text-sm transition active:scale-95 select-none bg-black/5 dark:bg-white/10 text-black/60 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/15";
+const hint = "text-xs text-center text-black/50 dark:text-white/55 leading-snug";
+const qrBox =
+	"hidden absolute bottom-full mb-2 left-1/2 -translate-x-1/2 p-3 w-52 rounded-xl border border-black/5 dark:border-white/10 bg-[var(--card-bg)] shadow-lg z-40 flex flex-col items-center gap-2";
+---
+<!-- 转发/分享条(两条):①微信 → 弹二维码,扫码在微信里打开后转发;②复制链接。
+     微信弹层的开合与复制动作都由 Layout 里的 document 委托处理
+     (分享条在 swup 会整体替换的容器里,只能绑 document 再每次点查 DOM)。
+     url 放进 data-* 属性,点击时才取,保证换页后是新文章的地址。 -->
+<div class="mt-6 pt-4 border-t border-dashed border-black/10 dark:border-white/[0.15] flex flex-wrap items-center justify-center gap-2.5">
+	<!-- 微信:二维码 -->
+	<div class="relative" data-pop-wrap>
+		<button type="button" data-pop-trigger aria-haspopup="true" aria-expanded="false" class={chip} title="微信转发">
+			<Icon name="fa6-brands:weixin" class="text-base leading-none" />
+			<span>微信</span>
+		</button>
+		<div data-pop-menu class={qrBox}>
+			<div class="bg-white rounded-lg p-2.5 qr-holder" set:html={pageQr} />
+			<p class={hint}>微信扫一扫在微信里打开<br />点右上角「···」转发给好友</p>
+		</div>
+	</div>
+
+	<button type="button" data-share="copy" data-url={url} class={chip} title="复制链接转发">
+		<Icon name="material-symbols:content-copy-outline" class="text-base leading-none" />
+		<span data-share-label>复制链接</span>
+	</button>
+</div>
+
+<style is:global>
+	/* qrcode svg 只有 viewBox,固定宽高撑开白底,避免溢出小屏弹层。
+	   用 is:global:svg 是 set:html 注入的节点,拿不到本组件 scoped 的 data-astro-cid 属性。 */
+	.qr-holder svg {
+		display: block;
+		width: 9.5rem;
+		height: 9.5rem;
+	}
+</style>
