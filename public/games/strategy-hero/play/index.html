@@ -349,7 +349,7 @@ const S = {
   icons:HD1_ICONS, icon:null, code:[], step:0,
   combo:0, correct:0, wrong:0, score:0, t0:0,
   sessionT0:null, sumLap:0, lapN:0,
-  maxCombo:0, panel:null, /* panel: null | "finish"(本局结束) | "board"(排行榜) */
+  maxCombo:0, penalized:false, panel:null, /* penalized:当前战备是否已扣过1次分; panel: null|"finish"|"board" */
 };
 
 function nextIcon(){
@@ -387,6 +387,7 @@ function presentNext(){
   S.code = codeFor(S.icon);
   S.step = 0;
   S.t0 = null; /* 本条用时:等按对第 1 个箭头才起表(handleDir 里设) */
+  S.penalized = false; /* 新战备:可以再扣 1 次分 */
   renderCard();
 }
 function updateTimer(){
@@ -410,13 +411,14 @@ function handleDir(d){
       S.lapN++;
       S.combo++; S.correct++;
       if(S.combo > S.maxCombo) S.maxCombo = S.combo;
-      S.score += 100 + (S.combo >= 5 ? 100 : 0);
+      /* 连击加成按每 5 次一档:1-4→+0,5-9→+100,10-14→+200… */
+      S.score += 100 + 100 * Math.floor(S.combo / 5);
       renderStats();
       presentNext();
     }
   } else {
     S.combo = 0; S.wrong++;
-    S.score -= 300;
+    if(!S.penalized){ S.score -= 300; S.penalized = true; } /* 同一个战备只扣 1 次分 */
     S.step = 0;
     renderStats();
     renderCard();
