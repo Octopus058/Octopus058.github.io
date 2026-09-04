@@ -112,3 +112,24 @@ export const giscusConfig = {
 	mapping: "pathname", // 评论按文章 URL 关联，稳定不易乱
 	reactionsEnabled: true,
 };
+
+/** 右下角全局悬浮音乐播放器(Aplayer)。
+ * 歌单来自网易云,网页端不能直接播,需要一个 meting 类的解析接口把歌单换成可直连播放的地址。
+ * 播放器在每次页面加载时都会实时重新拉取歌单(无本地/构建期缓存),所以只要下面接口
+ * 返回的是新数据,刷新页面就会自动跟随,无需重新构建。
+ *
+ * ⚠️ 注意: 这些公共代理会按歌单在服务器端缓存一段时间。刚在网易云改完歌单时,它可能
+ * 仍返回旧列表,等其缓存刷新(几小时到几天不等)或换用其他/自托管地址即可,页面上无需改动。
+ * apis 按顺序依次尝试; 每个地址后面会被拼上 neteaseId。
+ * 以后想用自己服务器上的 mp3,把 apis 换成自己接口、neteaseId 对应你自己的标识即可。
+ */
+export const musicConfig = {
+	enable: true, // 置为 false 则完全不加载播放器
+	neteaseId: "9352047247", // 网易云歌单 id(playlist?id= 后面的数字)
+	apis: [
+		// 唯一在用的解析接口。曾加的 api.i-meto.com 会连接后挂起不返回,
+		// 会让 fetch 无限等待、播放器起不来,已移除; 将来可在此追加新的可用地址。
+		"https://api.injahow.cn/meting/?server=netease&type=playlist&id=",
+	],
+	order: "random", // 播放顺序: "list" | "random"
+};

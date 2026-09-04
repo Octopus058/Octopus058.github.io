@@ -1,0 +1,338 @@
+---
+import { musicConfig } from "../../config";
+import "@/styles/APlayer.min.css";
+---
+
+{musicConfig.enable && (
+	<div id="site-music-player" aria-label="全局音乐播放器"></div>
+)}
+
+<!-- 这些 <style> 特意写成 is:global 并用 #site-music-player 收窄作用域,
+     因为 APlayer 的 DOM 是运行时生成的,Astro 的 scoped 选择器匹配不到。
+     亮暗主题一律走 CSS 变量 + html.dark,主题切换时播放器颜色即时跟随,不用重挂。
+     样式不做条件包裹: 即使 enable=false 也只是空规则(容器 div 不存在),无副作用。 -->
+<style is:global>
+	/* ---- 右下角悬浮卡片 ----
+	   注意: APlayer 会把 aplayer 类加到宿主 #site-music-player 自身,容器内直接是
+	   .aplayer-body/.aplayer-list,并不存在嵌套的 .aplayer 子元素。所以卡片级外观直接
+	   写在 #site-music-player 上;想命中内部控件时写成 #site-music-player .aplayer-xxx,
+	   绝不能写成 #site-music-player .aplayer .xxx —— 那要求 .aplayer 是它的后代,永远
+	   命中不了(之前"换肤没生效"就是栽在这上面)。 */
+		#site-music-player {
+			position: fixed;
+			bottom: 1rem;
+			right: 1rem;
+			z-index: 45;
+			width: min(21rem, calc(100vw - 2rem));
+			font-size: 14px;
+			/* 卡片外观(覆盖 APlayer 默认的 margin:5px 白底小圆角) */
+			margin: 0;
+			border-radius: var(--radius-large);
+			overflow: hidden;
+			background: var(--card-bg);
+			box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.12);
+			transition: background 0.3s ease, color 0.3s ease;
+		}
+		/* 封面 + 主控件底色不随主题变,进度/状态随主题变 */
+		#site-music-player .aplayer-played {
+			background: var(--primary) !important;
+		}
+		/* 无封面时可点区域用主题色 */
+		#site-music-player .aplayer-pic {
+			background-color: var(--primary) !important;
+		}
+		/* 歌词等附加层换肤 */
+		#site-music-player .aplayer-lrc {
+			background: var(--card-bg) !important;
+		}
+		/* 歌单列表:限高 + 内部滚动。
+		   注意 APlayer 的 listMaxHeight 选项会把值原样拼成内联 max-height,传数字会变成
+		   无单位的非法值而被浏览器忽略,导致 78 首整单全高撑开、整个部件冲出屏幕收不回。
+		   所以这里统一用 CSS !important 收口:列表最高 ~12rem,超出部分在列表内滚动,
+		   展开后播放条(含收起按钮)也始终留在可视区内。 */
+		#site-music-player .aplayer-list ol {
+			max-height: min(12rem, 40vh) !important;
+			overflow-y: auto;
+		}
+
+		/* ---- 暗色适配:html.dark 下覆盖 APlayer 写死的浅色 ---- */
+		html.dark #site-music-player {
+			background: var(--card-bg);
+			color: rgb(255 255 255 / 0.9);
+		}
+		html.dark #site-music-player .aplayer-info .aplayer-music .aplayer-title {
+			color: rgb(255 255 255 / 0.92);
+		}
+		html.dark #site-music-player .aplayer-info .aplayer-music .aplayer-author {
+			color: rgb(255 255 255 / 0.6);
+		}
+		html.dark #site-music-player .aplayer-info .aplayer-controller .aplayer-time {
+			color: rgb(255 255 255 / 0.55);
+		}
+		html.dark
+			#site-music-player
+			.aplayer-info
+			.aplayer-controller
+			.aplayer-time
+			.aplayer-icon
+			path {
+			fill: rgb(255 255 255 / 0.72);
+		}
+		html.dark
+			#site-music-player
+			.aplayer-info
+			.aplayer-controller
+			.aplayer-time
+			.aplayer-icon:hover
+			path {
+			fill: #fff;
+		}
+		html.dark #site-music-player .aplayer-info .aplayer-controller .aplayer-bar-wrap .aplayer-bar {
+			background: rgb(255 255 255 / 0.18);
+		}
+		html.dark
+			#site-music-player
+			.aplayer-info
+			.aplayer-controller
+			.aplayer-bar-wrap
+			.aplayer-bar
+			.aplayer-loaded {
+			background: rgb(255 255 255 / 0.35);
+		}
+		html.dark #site-music-player .aplayer-list {
+			background: var(--card-bg);
+		}
+		html.dark #site-music-player .aplayer-list ol li {
+			color: rgb(255 255 255 / 0.78);
+			border-top-color: rgb(255 255 255 / 0.08);
+		}
+		html.dark #site-music-player .aplayer-list ol li.aplayer-list-light {
+			background: var(--btn-plain-bg-hover);
+		}
+		html.dark
+			#site-music-player
+			.aplayer-list
+			ol
+			li
+			.aplayer-list-index,
+		html.dark
+			#site-music-player
+			.aplayer-list
+			ol
+			li
+			.aplayer-list-author {
+			color: rgb(255 255 255 / 0.55);
+		}
+		/* 列表内部滚动条的暗色外观(亮色用 APlayer 默认的浅灰即可) */
+		html.dark #site-music-player .aplayer-list ol::-webkit-scrollbar-thumb {
+			background: rgb(255 255 255 / 0.22);
+		}
+		html.dark #site-music-player .aplayer-list ol::-webkit-scrollbar-track {
+			background: rgb(255 255 255 / 0.05);
+		}
+	</style>
+
+<script>
+	import { musicConfig } from "../../config";
+
+	// APlayer 的样式不再用运行时动态 <link> 注入 —— Swup 换页会拿新页面的 <head> 整体替换,
+	// 把动态塞进 head 的样式连根删掉,播放器会闪一下"错乱/拉伸"。现在这份 css 由本组件
+	// 在构建期打进每个页面的静态样式里,换页前后 head 都带着它,不存在"被删"的窗口。
+	// JS 仍动态加载(只跑一次,代码已执行则移除 script 标签无影响)。
+	const JS_URL =
+		"https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js";
+
+	function loadScript(src: string) {
+		return new Promise<void>((resolve, reject) => {
+			const s = document.createElement("script");
+			s.src = src;
+			s.onload = () => resolve();
+			s.onerror = () => reject(new Error("script load failed: " + src));
+			document.head.appendChild(s);
+		});
+	}
+
+	async function boot() {
+		if (!musicConfig.enable) return;
+		const host = document.getElementById("site-music-player");
+		if (!host) return;
+		// Layout 的脚本只在整页加载时跑一次(Swup 换页不会重跑),所以这里不会重复初始化
+		const g = window as unknown as Record<string, unknown>;
+		if (g.__musicPlayerBooted) return;
+		g.__musicPlayerBooted = true;
+
+		try {
+			await loadScript(JS_URL);
+		} catch (e) {
+			console.error("音乐播放器资源加载失败:", e);
+			return;
+		}
+		if (!(window as unknown as Record<string, unknown>).APlayer) return;
+
+		// 依次尝试歌单解析接口,拿到第一个能用的就开播。
+		// 注意每个接口都加了超时: 有些 meting 代理(如曾加的 i-meto)会"连接后挂起永不返回",
+		// 若不加超时, fetch 会无限等待,播放器永远停在"资源已加载、歌单没拉到"的状态起不来。
+		// 超时即视为该接口失败换下一个;全部失败则 list 为 null,下面用空壳曲目兜底。
+		let list: {
+			name: string;
+			artist: string;
+			url: string;
+			pic: string;
+		}[] | null = null;
+		for (const api of musicConfig.apis) {
+			const ctrl = new AbortController();
+			const timer = setTimeout(() => ctrl.abort(), 8000);
+			try {
+				const res = await fetch(api + musicConfig.neteaseId, {
+					cache: "no-store",
+					signal: ctrl.signal,
+				});
+				if (!res.ok) continue;
+				const json = await res.json();
+				if (Array.isArray(json) && json.length) {
+					list = json.filter((s: { url?: string }) => !!s?.url);
+					if (list.length) break;
+				}
+			} catch (e) {
+				// 该接口不可用/超时,试下一个
+			} finally {
+				clearTimeout(timer);
+			}
+		}
+
+		const APlayerCtor = (window as unknown as Record<string, unknown>)
+			.APlayer as new (o: unknown) => unknown;
+		const audio = (list ?? []).map((s) => ({
+			name: s.name,
+			artist: s.artist,
+			url: s.url,
+			cover: s.pic,
+		}));
+
+		// 拿不到歌单也建一个空壳,避免页面出现一个永远转圈的空框
+		const player = new APlayerCtor({
+			container: host,
+			audio: audio.length ? audio : [{ name: "歌单加载失败", artist: "稍后刷新重试", url: "" }],
+			loop: "all",
+			order: musicConfig.order,
+			preload: "none",
+			volume: 0.5,
+			listFolded: true,
+			// 注意: 不传 listMaxHeight —— APlayer 把它原样拼成内联 max-height,数字会因无单位而失效;
+			// 列表限高统一交给上面那几条 CSS !important 规则管。
+		});
+		tameVolumeControl(player, host);
+	}
+
+	/** 修掉 APlayer 1.10.1 反直觉的音量交互(它"点喇叭=静音、竖条要按住拖才生效")。
+	 * 很多人(包括我们自己的站点)点那条音量竖条却触发静音,还把声音弄到很难恢复。
+	 * 这里改成直觉行为: 点喇叭 = 呼出滑条并取消静音(绝不静音); 点竖条 = 调到那一档;
+	 * 在喇叭上滚轮 = 步进调音量; APlayer 自带的"按住竖条上下拖"仍保留。
+	 */
+	function tameVolumeControl(
+		player: unknown,
+		host: HTMLElement,
+	) {
+		const wrap = host.querySelector<HTMLElement>(".aplayer-volume-wrap");
+		const barWrap = host.querySelector<HTMLElement>(".aplayer-volume-bar-wrap");
+		const btn = wrap?.querySelector("button");
+		const fill = host.querySelector<HTMLElement>(".aplayer-volume");
+		if (!wrap || !barWrap) return;
+
+		// APlayer 实例的公开 API 因版本/打包而异,audio 与 setter 可能挂在实例上、也可能只在
+		// 内部 player 上。这里不赌它,凡能找到的都试一遍,找不到就靠最底层(元素级)兜底。
+		const deep = (o: unknown, k: string): unknown => {
+			try {
+				return (o as Record<string, unknown>)?.[k];
+			} catch {
+				return undefined;
+			}
+		};
+		const inner = deep(player, "player");
+		const audio = (deep(player, "audio") ??
+			deep(inner, "audio") ??
+			host.querySelector("audio")) as
+			| { volume: number; muted: boolean }
+			| undefined;
+		// 注意: APlayer 的 volume() 内部会同步 滑条/audio/本地存储/喇叭图标(switchVolumeIcon),
+		// 但必须用 `实例.volume(n)` 的方式调用才能拿到正确的 this。若先把方法抠成裸函数再调用,
+		// 严格模式下 this 为 undefined,volume() 里第一行 this.bar.set(...) 就会抛错被 catch 吞掉,
+		// 表现成"声音/滑条变了但喇叭图标纹丝不动"。所以要记住宿主实例,而不是存裸函数。
+		let volOwner: unknown;
+		if (typeof deep(player, "volume") === "function") volOwner = player;
+		else if (typeof deep(inner, "volume") === "function") volOwner = inner;
+
+		// 读当前音量: 以滑条填充高度为权威(它才是 UI 上真实可见的量),拿不到再退回 audio
+		const getVol = (): number => {
+			if (fill) {
+				const p = parseFloat(fill.style.height ?? "");
+				if (!Number.isNaN(p)) return Math.max(0, Math.min(1, p / 100));
+			}
+			return audio?.volume ?? 0.5;
+		};
+		// 设音量: 内部 setter(有则同步状态/存储/图标)→ audio(真实出声)→ 滑条 UI(兜底必刷)
+		const setVol = (n: number) => {
+			n = Math.max(0, Math.min(1, n));
+			try {
+				// 以方法形式调用,保住 this,让 APlayer 顺带更新滑条、存储与图标
+				(volOwner as { volume?: (v: number) => void } | undefined)?.volume(n);
+			} catch {
+				/* 忽略 */
+			}
+			if (audio) {
+				try {
+					audio.volume = n;
+					audio.muted = n <= 0; // 音量>0 一律取消静音,避免"静音后救不回来"
+				} catch {
+					/* 忽略 */
+				}
+			}
+			if (fill) fill.style.height = `${Math.round(n * 100)}%`;
+		};
+		const showBar = () =>
+			barWrap.classList.add("aplayer-volume-bar-wrap-active");
+
+		if (btn) {
+			// 点喇叭: 在捕获阶段拦掉 APlayer 的"单击=静音",改为呼出滑条;静音/0 音量时顺便恢复
+			wrap.addEventListener(
+				"click",
+				(e) => {
+					const t = e.target as Node;
+					if (t !== btn && !btn.contains(t)) return;
+					e.preventDefault();
+					e.stopPropagation();
+					if ((audio && audio.muted) || getVol() === 0) setVol(0.5);
+					showBar();
+				},
+				true, // capture,抢在 APlayer 绑在按钮上的冒泡处理器之前
+			);
+			// 鼠标离开音量区域后自动收起滑条
+			wrap.addEventListener("mouseleave", () => {
+				barWrap.classList.remove("aplayer-volume-bar-wrap-active");
+			});
+			// 滚轮步进调音量(默认每格 ~6%)
+			wrap.addEventListener(
+				"wheel",
+				(e) => {
+					e.preventDefault();
+					setVol(getVol() + (e.deltaY > 0 ? -0.06 : 0.06));
+					showBar();
+				},
+				{ passive: false },
+			);
+		}
+		// 点竖条 = 按点击高度定档(原版单击无效,只响应拖拽)
+		barWrap.addEventListener("click", (e) => {
+			const r = barWrap.getBoundingClientRect();
+			if (!r.height) return;
+			const n = 1 - (e.clientY - r.top) / r.height;
+			setVol(n);
+		});
+	}
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", boot);
+	} else {
+		boot();
+	}
+</script>
