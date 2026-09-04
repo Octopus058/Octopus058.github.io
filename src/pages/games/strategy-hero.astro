@@ -1,0 +1,70 @@
+---
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { url } from "@utils/url-utils";
+
+const title = "小游戏 · Strategy Hero";
+const description =
+	"跟着图标在键盘上敲出对应的箭头序列，还原《绝地潜兵》式战备指令的小游戏。";
+---
+<MainGridLayout title={title} description={description} lang="zh_CN">
+    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-4">
+        <div class="card-base z-10 px-6 md:px-9 pt-6 pb-5 relative w-full">
+            <!-- 标题 + 玩法说明 -->
+            <div class="relative onload-animation">
+                <div class="transition w-full block font-bold mb-1 text-3xl md:text-[2rem]/[2.5rem] text-black/90 dark:text-white/90
+                    md:before:w-1 before:h-5 before:rounded-md before:bg-[var(--primary)]
+                    before:absolute before:top-[0.625rem] before:left-[-1.125rem]
+                ">
+                    Strategy Hero
+                </div>
+            </div>
+            <p class="text-black/50 dark:text-white/50 text-sm mt-2 leading-relaxed onload-animation">
+                游戏会随机展示一个战备图标，你要在键盘上按出对应的箭头序列。连击越高分数加成越多，按错会扣分。
+            </p>
+            <p class="text-black/40 dark:text-white/40 text-xs mt-1 onload-animation">
+                操作：点击下方游戏区域后，用 ↑↓←→ 或 WASD 输入箭头序列；总用时从按对第一个键开始计时。按 R 重新开始；按 Enter 结束本局，可自行填名字把成绩存进排行榜（免登录；联网时云端共享，断网先存本机）。
+            </p>
+
+            <!-- 游戏 iframe(同源,自带主题跟随) -->
+            <div class="relative mt-4 rounded-[var(--radius-large)] ring-1 ring-[var(--line-color)] overflow-hidden onload-animation"
+                 style="height: clamp(30rem, 74vh, 42rem)"
+            >
+                <iframe id="game-frame" src={url("/games/strategy-hero/play/")}
+                        title="Strategy Hero" frameborder="0" scrolling="no"
+                        class="block w-full h-full"
+                ></iframe>
+            </div>
+        </div>
+    </div>
+</MainGridLayout>
+
+<script>
+    // 自动把键盘焦点交给游戏:进页面直接按键就能玩。
+    function focusGame() {
+        const frame = document.getElementById("game-frame") as HTMLIFrameElement | null;
+        if (frame) {
+            try {
+                frame.contentWindow?.focus();
+            } catch (_) {
+                /* 跨源时忽略,此处为同源 */
+            }
+        }
+    }
+    // 捕获阶段监听 iframe 的 load(swup 切换回来后 iframe 会重建,监听只注册一次仍有效)
+    document.addEventListener(
+        "load",
+        (e) => {
+            const frame = e.target as HTMLIFrameElement;
+            if (frame && frame.id === "game-frame") {
+                focusGame();
+            }
+        },
+        true,
+    );
+    // 模块脚本可能晚于 iframe 首次 load 执行,漏掉事件时在这里补一次
+    if (document.readyState === "interactive" || document.readyState === "complete") {
+        focusGame();
+    } else {
+        document.addEventListener("DOMContentLoaded", focusGame);
+    }
+</script>

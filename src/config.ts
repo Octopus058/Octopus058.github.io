@@ -44,6 +44,15 @@ export const navBarConfig: NavBarConfig = {
 		LinkPreset.Archive,
 		LinkPreset.About,
 		{
+			name: "小游戏",
+			children: [
+				{
+					name: "Strategy Hero",
+					url: "/games/strategy-hero/", // Internal links should not include the base path, as it is automatically added
+				},
+			],
+		},
+		{
 			name: "友链",
 			url: "/links/", // Internal links should not include the base path, as it is automatically added
 		},
