@@ -73,6 +73,14 @@
      min-height:clamp(40px,7.5vh,54px);
      background:var(--slot); border-radius:clamp(12px,2.4vw,18px);
      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
+  /* 战备倒计时:一条细进度条,在箭头序列正下方,随剩余时间变短;不足 30% 变红 */
+  #cdTrack{width:min(clamp(140px,38vw,230px), 58%); height:clamp(5px,1.3vh,8px);
+     margin:clamp(4px,1vh,10px) auto clamp(2px,.5vh,4px);
+     background:var(--slot); border-radius:999px; overflow:hidden;
+     box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
+  #cdBar{display:block; height:100%; width:100%; border-radius:999px;
+     background:var(--primary); transition:width .08s linear;}
+  #cdBar.low{background:#e5484d;}
   .chip{width:clamp(24px,5vw,34px); height:clamp(24px,5vw,34px);
      display:flex; align-items:center; justify-content:center;
      transition:transform .08s ease;}
@@ -171,6 +179,7 @@
 <main>
   <img id="actImg" alt="战备">
   <div id="codeWrap"></div>
+  <div id="cdTrack" aria-hidden="true"><div id="cdBar"></div></div>
 </main>
 
 <footer>
@@ -345,7 +354,8 @@ const S = {
   icons:HD1_ICONS, icon:null, code:[], step:0,
   combo:0, correct:0, wrong:0, score:0, t0:0,
   sessionT0:null, sumLap:0, lapN:0,
-  maxCombo:0, penalized:false, panel:null, /* penalized:当前战备是否已扣过1次分; panel: null|"finish"|"board" */
+  maxCombo:0, panel:null, /* panel: null|"finish"|"board" */
+  deadline:null, limit:2, /* 当前战备倒计时截止时刻(performance.now 基准,毫秒)与本条时限(秒); deadline=null 表示还没起表 */
 };
 
 function nextIcon(){
@@ -378,13 +388,27 @@ function renderStats(){
   $("statCorrect").textContent = S.correct;
   $("statWrong").textContent = S.wrong;
 }
+/* 时限随当前连击收紧:0-4→3s, 5-9→2.5s, 10-14→2s, 15+→1.5s */
+function limitFor(c){ return c >= 15 ? 1.5 : c >= 10 ? 2 : c >= 5 ? 2.5 : 3; }
+/* 本局是否已“开跑”:面板未开且至少按过一下(按对/按错都算) */
+function live(){ return S.panel === null && (S.sessionT0 !== null || S.correct > 0 || S.wrong > 0); }
+/* 给当前战备从头起一条完整倒计时(按当前连击定档) */
+function armCode(){ S.limit = limitFor(S.combo); S.deadline = performance.now() + S.limit * 1000; }
 function presentNext(){
   S.icon = nextIcon();
   S.code = codeFor(S.icon);
   S.step = 0;
   S.t0 = null; /* 本条用时:等按对第 1 个箭头才起表(handleDir 里设) */
-  S.penalized = false; /* 新战备:可以再扣 1 次分 */
+  S.deadline = null;
+  if(live()) armCode(); /* 开跑后从“战备出现”即开始倒计时;开局第一条等首次按键才起表 */
   renderCard();
+}
+function handleTimeout(){
+  if(S.panel || S.deadline === null) return;
+  S.score -= 100; /* 超时 -100,重置连击并换新战备重新计时(超时不进“错误”,错误=按错次数) */
+  S.combo = 0;
+  presentNext();
+  renderStats();
 }
 function updateTimer(){
   const now = performance.now();
@@ -394,8 +418,26 @@ function updateTimer(){
   const avg = S.lapN ? (S.sumLap / S.lapN) / 1000 : 0;
   $("statAvg").textContent = avg.toFixed(2);
 }
+/* 倒计时进度条:每帧刷新;归零即超时换新战备 */
+function cdLoop(now){
+  const bar = $("cdBar");
+  if(S.panel === null && S.deadline !== null){
+    const remain = S.deadline - now;
+    if(remain <= 0){
+      handleTimeout();
+      bar.style.width = "100%"; bar.classList.remove("low");
+    }else{
+      bar.style.width = Math.max(0, Math.min(1, remain / (S.limit * 1000))) * 100 + "%";
+      bar.classList.toggle("low", remain < S.limit * 300); /* 剩不足 30% 变红 */
+    }
+  }else{
+    bar.style.width = "100%"; bar.classList.remove("low"); /* 未开跑或面板打开:整条待命 */
+  }
+  requestAnimationFrame(cdLoop);
+}
 const DIRKEY = { arrowup:0, w:0, arrowleft:1, a:1, arrowdown:2, s:2, arrowright:3, d:3 };
 function handleDir(d){
+  if(S.deadline === null) armCode(); /* 开局第一次按键才让第一条的倒计时开始走 */
   if(d === S.code[S.step]){
     /* 总计时 + 本条用时:都从按对(本条的)第 1 个箭头起表 */
     if(S.sessionT0 === null) S.sessionT0 = performance.now();
@@ -413,8 +455,7 @@ function handleDir(d){
       presentNext();
     }
   } else {
-    S.combo = 0; S.wrong++;
-    if(!S.penalized){ S.score -= 300; S.penalized = true; } /* 同一个战备只扣 1 次分 */
+    S.wrong++; /* 按错:不重置连击、不扣分,仅把当前序列退回重输;只有超时才会清连击并 -100 */
     S.step = 0;
     renderStats();
     renderCard();
@@ -456,6 +497,7 @@ function closeOverlay(){
   ov.classList.remove("open");
   ov.innerHTML = "";
   S.panel = null;
+  if(live()) armCode(); /* 从排行榜/结束面板返回:给当前战备重新起表(等于暂停后恢复) */
 }
 
 /* 本局数据快照(面板打开后游戏按键已冻结,记录不会继续变) */
@@ -632,6 +674,7 @@ window.addEventListener("keydown", e=>{
 presentNext();
 renderStats();
 setInterval(updateTimer, 100);
+requestAnimationFrame(cdLoop);
 </script>
 </body>
 </html>

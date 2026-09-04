@@ -18,11 +18,8 @@ const description =
                     Strategy Hero
                 </div>
             </div>
-            <p class="text-black/50 dark:text-white/50 text-sm mt-2 leading-relaxed onload-animation">
-                游戏会随机展示一个战备图标，你要在键盘上按出对应的箭头。连击每满5次，战备分数提升一次，同一个战备按错会扣最多一次分。
-            </p>
             <p class="text-black/40 dark:text-white/40 text-xs mt-1 onload-animation">
-                操作：点击下方游戏区域后，用 ↑↓←→ 或 WASD 输入箭头；总用时从按对第一个键开始计时。按 R 重新开始；按 Enter 结束本局，可填ID把成绩存进排行榜。
+                游戏会随机展示一个战备图标，你要在键盘上按出对应的箭头。总用时从按对第一个键开始计时。按 R 重新开始；按 Enter 结束本局，可填ID把成绩存进排行榜。
             </p>
 
             <!-- 游戏 iframe(同源,自带主题跟随) -->
@@ -33,6 +30,19 @@ const description =
                         title="Strategy Hero" frameborder="0" scrolling="no"
                         class="block w-full h-full"
                 ></iframe>
+            </div>
+
+            <!-- 详细规则(放在游戏框下方) -->
+            <div class="relative mt-4 rounded-[var(--radius-large)] ring-1 ring-[var(--line-color)] px-5 md:px-7 py-4 onload-animation">
+                <div class="font-bold text-black/90 dark:text-white/90 mb-2">游戏规则</div>
+                <ul class="m-0 pl-0 list-none text-sm leading-relaxed text-black/50 dark:text-white/50 space-y-1.5">
+                    <li>· 每次随机出现一个战备图标，用 ↑↓←→ 或 WASD 依次按出它对应的箭头序列；按完整条即完成该战备。</li>
+                    <li>· 倒计时(箭头下方进度条)从战备出现起开始：超时扣 100 分、连击清零，并换下一个战备重新计时。</li>
+                    <li>· 时限随连击缩短：连击 0–4 → 3 秒；5–9 → 2.5 秒；10–14 → 2 秒；15 及以上 → 1.5 秒。</li>
+                    <li>· 按错箭头不扣分、也不打断连击，只把当前序列退回重输，并计入一次“错误”。</li>
+                    <li>· 每完成一个战备 +100 分；连击每满 5 次，单个战备再多 +100(连击 5–9 每个 +200、10–14 每个 +300，依此类推)。</li>
+                    <li>· 总用时从按对第一个键开始计时；按 R 重新开始，按 Enter 结束本局并填 ID 把成绩存进排行榜。</li>
+                </ul>
             </div>
         </div>
     </div>
