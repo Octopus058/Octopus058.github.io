@@ -2,7 +2,7 @@
 import { Icon } from "astro-icon/components";
 import { navBarConfig, siteConfig } from "../config";
 import { LinkPresets } from "../constants/link-presets";
-import { LinkPreset, type NavBarLink } from "../types/config";
+import { LinkPreset, type NavBarDropdown, type NavBarLink } from "../types/config";
 import { url } from "../utils/url-utils";
 import LightDarkSwitch from "./LightDarkSwitch.svelte";
 import Search from "./Search.svelte";
@@ -11,8 +11,10 @@ import NavMenuPanel from "./widget/NavMenuPanel.astro";
 
 const className = Astro.props.class;
 
-let links: NavBarLink[] = navBarConfig.links.map(
-	(item: NavBarLink | LinkPreset): NavBarLink => {
+type NavItem = NavBarLink | NavBarDropdown;
+
+let links: NavItem[] = navBarConfig.links.map(
+	(item: NavItem | LinkPreset): NavItem => {
 		if (typeof item === "number") {
 			return LinkPresets[item];
 		}
@@ -34,6 +36,30 @@ let links: NavBarLink[] = navBarConfig.links.map(
         </a>
         <div class="hidden md:flex">
             {links.map((l) => {
+                if ("children" in l) {
+                    return (
+                        <div class="group relative flex items-center h-11">
+                            <span class="btn-plain scale-animation rounded-lg h-11 font-bold px-5 active:scale-95 flex items-center cursor-pointer select-none" aria-haspopup="true">
+                                <span class="flex items-center">
+                                    {l.name}
+                                    <Icon name="material-symbols:keyboard-arrow-down-rounded"
+                                          class="text-[1.15rem] ml-0.5 transition group-hover:rotate-180"></Icon>
+                                </span>
+                            </span>
+                            <div class="absolute right-0 top-full pt-2 w-max opacity-0 invisible translate-y-1 pointer-events-none transition duration-150 ease-out group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto">
+                                <div class="float-panel px-2 py-2 min-w-[10rem]">
+                                    {l.children.map((c) => (
+                                        <a href={url(c.url)}
+                                           class="flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 transition font-bold text-[0.95rem] text-black/75 dark:text-white/75 hover:text-[var(--primary)] hover:bg-[var(--btn-plain-bg-hover)]"
+                                        >
+                                            {c.name}
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
                 return <a aria-label={l.name} href={l.external ? l.url : url(l.url)} target={l.external ? "_blank" : null}
                           class="btn-plain scale-animation rounded-lg h-11 font-bold px-5 active:scale-95"
                 >

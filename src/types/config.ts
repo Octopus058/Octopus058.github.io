@@ -56,8 +56,14 @@ export type NavBarLink = {
 	external?: boolean;
 };
 
+/** 下拉菜单分组:父项只有名字,子项才是可点的叶子链接 */
+export type NavBarDropdown = {
+	name: string;
+	children: NavBarLink[];
+};
+
 export type NavBarConfig = {
-	links: (NavBarLink | LinkPreset)[];
+	links: (NavBarLink | NavBarDropdown | LinkPreset)[];
 };
 
 export type ProfileConfig = {
