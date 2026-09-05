@@ -1,44 +1,94 @@
 <div align="center">
 
-# Oct の 小破站
+# 🐙 Oct の 小破站
+
 > *Welcome come to my Black Parade*
->
-> 基于 [Astro](https://astro.build) + [Fuwari](https://github.com/saicaca/fuwari) 主题，由 Hexo + Butterfly 迁移而来。
+
+A personal blog, powered by [Astro](https://astro.build) + [Fuwari](https://github.com/saicaca/fuwari),
+deployed on GitHub Pages — **🔗 https://oct0pu5.cn**.
+
+**English** | [简体中文](/docs/README.zh-CN.md)
+
 </div>
 
-## 你好
-这里是互联网的一个角落，Oct0pu5 的个人主页。
+## About
 
-## 我是谁
-我是一名中国石油大学（北京）的学生，笔名刈夫。你也可以叫我 Oct 或章鱼。
+This is the personal blog of Oct0pu5 (pen name **刈夫**, or just **Oct**), featuring essays, poetry and technical notes.
+The site includes posts, standalone pages, friend links, and some built-in mini-games.
 
-## 本地开发
-```bash
-pnpm install        # 安装依赖
-pnpm dev            # 启动开发服务器
-pnpm build          # 构建到 dist/
-pnpm preview        # 预览构建产物
+## Local Development
+
+- Requirements: Node.js 22+, pnpm 9.14.4+
+- Install: `pnpm install`
+- Dev server (default http://localhost:4321): `pnpm dev`
+- Build to `dist/` (includes Pagefind search index): `pnpm build`
+- Preview the production build: `pnpm preview`
+- Type-check: `pnpm check`, `pnpm type-check`
+- Create a new post: `pnpm run new-post -- my-new-post`
+
+> 💡 Pagefind is not available in dev mode, so the search box will fall back to mock data; run `pnpm build` followed by `pnpm preview` to try the full search.
+
+## Deployment
+
+GitHub Actions is configured: building on every push to `main` (or PR). On a push to `main`, the `dist/` build output is automatically deployed to the `gh-pages` branch and served by GitHub Pages under the custom domain **oct0pu5.cn** via `public/CNAME`.
+Alternatively, run `pnpm build` locally and publish `dist/` to any static hosting platform.
+
+## Project Structure
+
+```text
+src/
+├── components/          # Page components (Navbar, Search, sidebar widgets, etc.)
+├── config.ts            # Core site config: title/nav/avatar/social/comments/music
+├── content/
+│   ├── posts/           # Blog posts (Markdown)
+│   ├── spec/            # Standalone pages (e.g. about.md)
+│   └── friends/         # Friend-link data
+├── layouts/             # Layout components
+├── pages/               # Routes / page files
+├── plugins/             # Markdown plugins (GitHub card, admonitions, etc.)
+├── styles/              # Global styles
+└── utils/               # Utility functions
+public/                  # Static assets
+├── CNAME                # Custom domain
+└── games/               # Mini-game resources
+.github/workflows/       # GitHub Actions (build & deploy, Dependabot auto-merge)
 ```
 
-## 内容
-- 文章：`src/content/posts/*.md`
-- 关于页：`src/content/spec/about.md`
-- 友情链接：`src/content/friends/*.md`
-- 站点配置：`src/config.ts`
+## Writing
 
-## 部署
-GitHub Actions 将 `main` 分支构建结果（`dist/`）自动部署到 `gh-pages` 分支，
-由 GitHub Pages 以自定义域名 **oct0pu5.cn** 提供服务。
+```bash
+pnpm run new-post -- hello-world
+```
 
-## 联系我
-| 渠道 | ID/号码 |
-| ---  | --- |
-| Bilibili | Oct0pu5 |
-| QQ | 2379401911 |
-| QQ群 | 697702743 |
-| 邮箱 | 2379401911@qq.com |
+The script creates `hello-world.md` under `src/content/posts/` and generates a post template. Frontmatter fields: `title`, `published` (required), plus optional `updated`, `description`, `image`, `category`, `draft`, `pinned`, `lang`.
 
----
+Extended Markdown syntax available in posts:
 
-主题 [Fuwari](https://github.com/saicaca/fuwari)（MIT License）。本站内容采用
-[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) 许可证。
+```markdown
+::github{repo="Octopus058/Octopus058.github.io"}
+```
+
+```markdown
+:::tip[提示标题]
+This is a tip.
+:::
+```
+
+GitHub-style admonitions are also supported:
+
+```markdown
+> [!NOTE]
+> This is a note.
+```
+
+## Contact Me
+
+- Bilibili:Oct0pu5
+- QQ / QQ group:2379401911 / 697702743
+- Email:2379401911@qq.com
+- GitHub:[Octopus058](https://github.com/Octopus058)
+
+## License
+
+- Site content is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) (see [LICENSE](./LICENSE)).
+- The [Fuwari](https://github.com/saicaca/fuwari) theme is MIT licensed; thanks to the original author [saicaca](https://github.com/saicaca).
