@@ -388,8 +388,8 @@ function renderStats(){
   $("statCorrect").textContent = S.correct;
   $("statWrong").textContent = S.wrong;
 }
-/* 时限随当前连击收紧:0-4→3s, 5-9→2.5s, 10-14→2s, 15+→1.5s */
-function limitFor(c){ return c >= 15 ? 1.5 : c >= 10 ? 2 : c >= 5 ? 2.5 : 3; }
+/* 时限随当前连击收紧:0-4→3.5s, 5-9→3s, 10-14→2.5s, 15-19→2s, 20+→1.5s */
+function limitFor(c){ return c >= 20 ? 1.5 : c >= 15 ? 2 : c >= 10 ? 2.5 : c >= 5 ? 3 : 3.5; }
 /* 本局是否已“开跑”:面板未开且至少按过一下(按对/按错都算) */
 function live(){ return S.panel === null && (S.sessionT0 !== null || S.correct > 0 || S.wrong > 0); }
 /* 给当前战备从头起一条完整倒计时(按当前连击定档) */
@@ -405,10 +405,8 @@ function presentNext(){
 }
 function handleTimeout(){
   if(S.panel || S.deadline === null) return;
-  S.score -= 100; /* 超时 -100,重置连击并换新战备重新计时(超时不进“错误”,错误=按错次数) */
-  S.combo = 0;
-  presentNext();
-  renderStats();
+  /* 超时即整局失败:直接结束并跳数据界面 */
+  endRun();
 }
 function updateTimer(){
   const now = performance.now();
@@ -455,7 +453,8 @@ function handleDir(d){
       presentNext();
     }
   } else {
-    S.wrong++; /* 按错:不重置连击、不扣分,仅把当前序列退回重输;只有超时才会清连击并 -100 */
+    S.wrong++; /* 按错:结束连击(清零),把当前序列退回重输;不扣分但不破坏倒计时 */
+    S.combo = 0;
     S.step = 0;
     renderStats();
     renderCard();
@@ -603,7 +602,7 @@ async function syncCloud(){
 let boardToken = 0; /* 异步刷新竞态防护:关闭或重开后旧响应作废 */
 function boardRows(list, hl){
   const all = list || [];
-  if(!all.length) return '<p class="empty">还没有记录。<br>玩一局按 Enter 结束保存,即可上榜(免登录)。</p>';
+  if(!all.length) return '<p class="empty">还没有记录。<br>完成一局(超时结束后保存成绩)即可上榜,免登录。</p>';
   return all.slice().sort((a, b) => num(b.score) - num(a.score) || num(a.time) - num(b.time)).slice(0, 20).map((r, i) => {
     const cls = "rec" + (r.id === hl ? " rec-new" : "");
     return '<details class="' + cls + '"' + (r.id === hl ? " open" : "") + '>'
@@ -664,7 +663,7 @@ window.addEventListener("keydown", e=>{
     return;
   }
   if(k === "r"){ resetRun(); return; }
-  if(k === "enter"){ e.preventDefault(); endRun(); return; }
+  /* 不再支持按键结束本局:超时会自动跳数据界面 */
   if(typeof DIRKEY[k] === "number"){
     e.preventDefault();
     handleDir(DIRKEY[k]);
