@@ -453,9 +453,10 @@ function handleDir(d){
       presentNext();
     }
   } else {
-    S.wrong++; /* 按错:结束连击(清零),把当前序列退回重输;不扣分但不破坏倒计时 */
+    S.wrong++; /* 按错:结束连击(清零),把当前序列退回重输;倒计时扣 0.2 秒 */
     S.combo = 0;
     S.step = 0;
+    if(S.deadline !== null) S.deadline -= 200;
     renderStats();
     renderCard();
   }

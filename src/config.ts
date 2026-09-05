@@ -50,6 +50,10 @@ export const navBarConfig: NavBarConfig = {
 					name: "Strategy Hero",
 					url: "/games/strategy-hero/", // Internal links should not include the base path, as it is automatically added
 				},
+				{
+					name: "Strategy Hero 2",
+					url: "/games/strategy-hero-2/", // Internal links should not include the base path, as it is automatically added
+				},
 			],
 		},
 		{

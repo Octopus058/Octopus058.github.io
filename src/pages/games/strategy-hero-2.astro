@@ -2,9 +2,9 @@
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 import { url } from "@utils/url-utils";
 
-const title = "小游戏 · Strategy Hero";
+const title = "小游戏 · Strategy Hero 2";
 const description =
-	"跟着图标在键盘上敲出对应的箭头序列，还原《绝地潜兵》式战备指令的小游戏。";
+	"跟着图标在键盘上敲出对应的箭头序列，还原《绝地潜兵 2》(Helldivers 2)式战备指令的小游戏。";
 ---
 <MainGridLayout title={title} description={description} lang="zh_CN">
     <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-4">
@@ -15,19 +15,19 @@ const description =
                     md:before:w-1 before:h-5 before:rounded-md before:bg-[var(--primary)]
                     before:absolute before:top-[0.625rem] before:left-[-1.125rem]
                 ">
-                    Strategy Hero
+                    Strategy Hero 2
                 </div>
             </div>
             <p class="text-black/40 dark:text-white/40 text-xs mt-1 onload-animation">
-                游戏会随机展示一个《绝地潜兵》战备图标，你要在键盘上按出对应的箭头。总用时从按对第一个键开始计时。超时即本局结束，自动显示成绩并可填 ID 存进排行榜；按 R 重新开始。
+                游戏会随机展示一个《绝地潜兵 2》战备图标，你要在键盘上按出对应的箭头。总用时从按对第一个键开始计时。超时即本局结束，自动显示成绩并可填 ID 存进排行榜；按 R 重新开始。
             </p>
 
             <!-- 游戏 iframe(同源,自带主题跟随) -->
             <div class="relative mt-4 rounded-[var(--radius-large)] ring-1 ring-[var(--line-color)] overflow-hidden onload-animation"
                  style="height: clamp(30rem, 74vh, 42rem)"
             >
-                <iframe id="game-frame" src={url("/games/strategy-hero/play/")}
-                        title="Strategy Hero" frameborder="0" scrolling="no"
+                <iframe id="game-frame" src={url("/games/strategy-hero-2/play/")}
+                        title="Strategy Hero 2" frameborder="0" scrolling="no"
                         class="block w-full h-full"
                 ></iframe>
             </div>
@@ -36,7 +36,7 @@ const description =
             <div class="relative mt-4 rounded-[var(--radius-large)] ring-1 ring-[var(--line-color)] px-5 md:px-7 py-4 onload-animation">
                 <div class="font-bold text-black/90 dark:text-white/90 mb-2">游戏规则</div>
                 <ul class="m-0 pl-0 list-none text-sm leading-relaxed text-black/50 dark:text-white/50 space-y-1.5">
-                    <li>· 每次随机出现一个战备图标，用 ↑↓←→ 或 WASD 依次按出它对应的箭头序列；按完整条即完成该战备。</li>
+                    <li>· 每次随机出现一个《绝地潜兵 2》战备图标，用 ↑↓←→ 或 WASD 依次按出它对应的箭头序列；按完整条即完成该战备。</li>
                     <li>· 倒计时(箭头下方进度条)从战备出现起开始：超时即本局失败，自动跳到成绩界面。</li>
                     <li>· 时限随连击缩短：连击 0–4 → 3.5 秒；5–9 → 3 秒；10–14 → 2.5 秒；15–19 → 2 秒；20 及以上 → 1.5 秒。</li>
                     <li>· 按错箭头会结束连击(连击清零)且把当前序列退回重输，当前倒计时扣 0.2 秒，并计入一次“错误”。</li>
