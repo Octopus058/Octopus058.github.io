@@ -62,25 +62,6 @@ pnpm run new-post -- hello-world
 
 The script creates `hello-world.md` under `src/content/posts/` and generates a post template. Frontmatter fields: `title`, `published` (required), plus optional `updated`, `description`, `image`, `category`, `draft`, `pinned`, `lang`.
 
-Extended Markdown syntax available in posts:
-
-```markdown
-::github{repo="Octopus058/Octopus058.github.io"}
-```
-
-```markdown
-:::tip[提示标题]
-This is a tip.
-:::
-```
-
-GitHub-style admonitions are also supported:
-
-```markdown
-> [!NOTE]
-> This is a note.
-```
-
 ## Contact Me
 
 - Bilibili:Oct0pu5

@@ -62,25 +62,6 @@ pnpm run new-post -- hello-world
 脚本会在 `src/content/posts/` 下创建 `hello-world.md` 并生成文章模板。文章 frontmatter 支持字段:
 `title`、`published`(必填)，`updated`、`description`、`image`、`category`、`draft`、`pinned`、`lang`(可选)。
 
-Markdown 内可用的扩展语法:
-
-```markdown
-::github{repo="Octopus058/Octopus058.github.io"}
-```
-
-```markdown
-:::tip[提示标题]
-这是一条提示内容。
-:::
-```
-
-也支持 GitHub 风格 admonition:
-
-```markdown
-> [!NOTE]
-> 这是一条 note。
-```
-
 ## 📮 联系我
 
 - Bilibili:Oct0pu5
