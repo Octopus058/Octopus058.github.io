@@ -54,7 +54,7 @@
     "remark-github-admonitions-to-directives": "^1.0.5",
     "remark-math": "^6.0.0",
     "remark-sectionize": "^2.1.0",
-    "sanitize-html": "^2.17.0",
+    "sanitize-html": "^2.17.7",
     "sharp": "^0.34.5",
     "stylus": "^0.64.0",
     "svelte": "^5.39.8",
@@ -70,7 +70,7 @@
     "@types/markdown-it": "^14.1.2",
     "@types/mdast": "^4.0.4",
     "@types/qrcode": "^1.5.6",
-    "@types/sanitize-html": "^2.16.0",
+    "@types/sanitize-html": "^2.16.1",
     "postcss-import": "^16.1.1",
     "postcss-nesting": "^13.0.2",
     "qrcode": "^1.5.4"
