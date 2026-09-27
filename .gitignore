@@ -29,3 +29,7 @@ yarn.lock
 # ide
 .idea
 *.iml
+
+# 原始文稿 / 本地素材(源文件,不入库)
+*.docx
+*.doc
